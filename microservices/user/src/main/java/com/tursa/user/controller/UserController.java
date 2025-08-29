@@ -20,47 +20,110 @@ public class UserController {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @GetMapping(path = "/users/all")
-    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
+    public ResponseEntity<List<User>> getAllUsers() {
         try {
             List<User> users = userService.getAllUsers();
-            return ResponseEntity.ok(new ApiResponse<>(true, "Users retrieved successfully", users));
-
+            return ResponseEntity.ok(users);
         } catch (Exception e) {
             logger.error("Error retrieving all users: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Internal server error", null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @PostMapping(path = "/users/register")
-    public ResponseEntity<ApiResponse<User>> registerUser(@Valid @RequestBody User user) {
+    public ResponseEntity<User> registerUser(@RequestBody User user) {
         try {
             User createdUser = userService.createUser(user);
-            return ResponseEntity.ok(new ApiResponse<>(true, "User registered successfully", createdUser));
-
+            return ResponseEntity.ok(createdUser);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>(false, e.getMessage(), null));
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             logger.error("Error registering user: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Internal server error", null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping(path = "/users/rfid/{rfid}")
-    public ResponseEntity<ApiResponse<User>> getUserByRfid(@PathVariable String rfid) {
+    public ResponseEntity<User> getUserByRfid(@PathVariable String rfid) {
         try {
             User user = userService.findByRfid(rfid);
-            return ResponseEntity.ok(new ApiResponse<>(true, "User found", user));
-
+            return ResponseEntity.ok(user);
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound()
-                    .build();
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             logger.error("Error finding user {}: {}", rfid, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Internal server error", null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping(path = "/users/location/{rfid}")
+    public ResponseEntity<User> updateLocation(@PathVariable String rfid, @RequestParam Double latitude, @RequestParam Double longitude) {
+        try {
+            if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            User user = userService.updateLocation(rfid, latitude, longitude);
+            return ResponseEntity.ok(user);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error updating location for user {}: {}", rfid, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping(path = "/users/status/{rfid}")
+    public ResponseEntity<User> updateStatus(@PathVariable String rfid, @RequestParam User.UserStatus status) {
+        try {
+            User user = userService.updateUserStatus(rfid, status);
+            return ResponseEntity.ok(user);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error updating status for user {}: {}", rfid, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping(path = "/users/rescue")
+    public ResponseEntity<List<User>> getUsersNeedingRescue() {
+        try {
+            List<User> users = userService.getUsersNeedingRescue();
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            logger.error("Error retrieving users needing rescue: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping(path = "/users/area")
+    public ResponseEntity<List<User>> getUsersInArea(
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam(defaultValue = "5.0") Double radiusKm) {
+        try {
+            List<User> users = userService.getUsersInArea(latitude, longitude, radiusKm);
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            logger.error("Error retrieving users in area: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping(path = "/users/family/{rfid}")
+    public ResponseEntity<User> updateFamilyInfo(@PathVariable String rfid, @RequestBody User request) {
+        try {
+            User user = userService.updateFamilyInfo(rfid,
+                    request.getFamilyCount(),
+                    request.getChildrenCount(),
+                    request.getElderlyCount());
+            return ResponseEntity.ok(user);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error updating family info for user {}: {}", rfid, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

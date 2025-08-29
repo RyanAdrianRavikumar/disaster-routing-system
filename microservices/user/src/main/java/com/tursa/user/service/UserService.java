@@ -79,7 +79,7 @@ public class UserService {
             User user = findByRfid(rfid);
             user.setStatus(status);
 
-            // Calculate rescue priority based on status and family composition
+            // Calculate rescue priority based on status and family
             if (status == User.UserStatus.NEEDS_RESCUE) {
                 int priority = calculateRescuePriority(user);
                 user.setRescuePriority(priority);
@@ -93,6 +93,18 @@ public class UserService {
             logger.error("Error updating status for user {}: {}", rfid, e.getMessage());
             throw new RuntimeException("Failed to update user status", e);
         }
+    }
+
+    public List<User> getUsersInArea(double centerLat, double centerLon, double radiusKm) {
+        double latRange = radiusKm / 111.0; // Approximate km per degree of latitude
+        double lonRange = radiusKm / (111.0 * Math.cos(Math.toRadians(centerLat)));
+
+        double minLat = centerLat - latRange;
+        double maxLat = centerLat + latRange;
+        double minLon = centerLon - lonRange;
+        double maxLon = centerLon + lonRange;
+
+        return userRepository.findUsersInArea(minLat, maxLat, minLon, maxLon);
     }
 
     public User updateFamilyInfo(String rfid, Integer familyCount, Integer childrenCount, Integer elderlyCount) {
