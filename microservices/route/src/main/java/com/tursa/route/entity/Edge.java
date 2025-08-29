@@ -1,40 +1,34 @@
 package com.tursa.route.entity;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "graph_edges",
-        indexes = {
-                @Index(name = "idx_from_node", columnList = "from_node_id"),
-                @Index(name = "idx_to_node", columnList = "to_node_id"),
-                @Index(name = "idx_weight", columnList = "weight")
-        })
+@Table(name = "edges")
 public class Edge {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "edge_id")
+    private String edgeId;
 
-    @Column(name = "from_node_id", nullable = false, length = 50)
+    @Column(name = "from_node_id", nullable = false)
     private String fromNodeId;
 
-    @Column(name = "to_node_id", nullable = false, length = 50)
+    @Column(name = "to_node_id", nullable = false)
     private String toNodeId;
 
-    @Column(name = "weight", nullable = false, precision = 10, scale = 4)
-    private Double weight; // Distance or time
+    @Column(name = "weight", nullable = false)
+    private Double weight;
 
-    @Column(name = "road_type", length = 50) // HIGHWAY, MAIN_ROAD, SIDE_ROAD
+    @Column(name = "road_type")
     private String roadType;
 
     @Column(name = "is_bidirectional")
     private Boolean isBidirectional = true;
 
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "is_safe")
+    private Boolean isSafe = true;
 
     // Constructors
     public Edge() {}
@@ -44,11 +38,23 @@ public class Edge {
         this.toNodeId = toNodeId;
         this.weight = weight;
         this.isBidirectional = true;
+        this.isSafe = true;
+    }
+
+    public Edge(String edgeId, String fromNodeId, String toNodeId, Double weight,
+                String roadType, Boolean isBidirectional, Boolean isSafe) {
+        this.edgeId = edgeId;
+        this.fromNodeId = fromNodeId;
+        this.toNodeId = toNodeId;
+        this.weight = weight;
+        this.roadType = roadType;
+        this.isBidirectional = isBidirectional;
+        this.isSafe = isSafe;
     }
 
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getEdgeId() { return edgeId; }
+    public void setEdgeId(String edgeId) { this.edgeId = edgeId; }
 
     public String getFromNodeId() { return fromNodeId; }
     public void setFromNodeId(String fromNodeId) { this.fromNodeId = fromNodeId; }
@@ -65,5 +71,6 @@ public class Edge {
     public Boolean getIsBidirectional() { return isBidirectional; }
     public void setIsBidirectional(Boolean isBidirectional) { this.isBidirectional = isBidirectional; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public Boolean getIsSafe() { return isSafe; }
+    public void setIsSafe(Boolean isSafe) { this.isSafe = isSafe; }
 }
