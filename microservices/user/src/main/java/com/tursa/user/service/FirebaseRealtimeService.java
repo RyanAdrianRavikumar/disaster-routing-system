@@ -2,7 +2,9 @@ package com.tursa.user.service;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import org.springframework.stereotype.Service;
 
+@Service
 public class FirebaseRealtimeService {
     private final DatabaseReference database;
 

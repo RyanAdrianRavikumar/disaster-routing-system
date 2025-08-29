@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_location", columnList = "current_latitude,current_longitude")
         })
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,10 +28,10 @@ public class User {
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
-    @Column(name = "current_latitude", precision = 10, scale = 8)
+    @Column(name = "current_latitude")
     private Double currentLatitude;
 
-    @Column(name = "current_longitude", precision = 11, scale = 8)
+    @Column(name = "current_longitude")
     private Double currentLongitude;
 
     @Column(name = "family_count")

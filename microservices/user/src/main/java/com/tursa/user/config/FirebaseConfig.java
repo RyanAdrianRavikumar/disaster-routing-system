@@ -14,11 +14,11 @@ public class FirebaseConfig {
     public void initFirebase() {
         try {
             FileInputStream serviceAccount =
-                    new FileInputStream("src/main/resources/firebase-service-account.json");
+                    new FileInputStream("src/main/resources/smart-evacuation-system-firebase-adminsdk-fbsvc-c2b2b3872d.json");
 
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .setDatabaseUrl("https://<your-project-id>.firebaseio.com/") // replace with your Firebase DB URL
+                    .setDatabaseUrl("https://smart-evacuation-system-default-rtdb.asia-southeast1.firebasedatabase.app/") // replace with your Firebase DB URL
                     .build();
 
             if (FirebaseApp.getApps().isEmpty()) {
