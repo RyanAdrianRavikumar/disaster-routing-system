@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Firebase service account
+/src/main/resources/smart-evacuation-system-firebase-adminsdk-fbsvc-c2b2b3872d
