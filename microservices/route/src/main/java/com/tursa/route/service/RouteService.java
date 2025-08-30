@@ -45,8 +45,8 @@ public class RouteService {
             // Create sample nodes for Sri Lankan locations
             List<Node> nodes = Arrays.asList(
                     new Node("N001", 6.9271, 79.8612, "Fort Railway Station", "TRANSPORT_HUB", true),
-                    new Node("N002", 6.9319, 79.8478, "Galle Face Green", "OPEN_SPACE", true),
-                    new Node("N003", 6.9244, 79.8553, "Independence Square", "LANDMARK", true),
+                    new Node("N002", 6.9319, 79.8478, "Galle Face Green", "SHELTER", true),
+                    new Node("N003", 6.9244, 79.8553, "Independence Square", "SHELTER", true),
                     new Node("N004", 6.9350, 79.8500, "Main Hospital", "HOSPITAL", true)
             );
             nodeRepository.saveAll(nodes);
@@ -154,7 +154,14 @@ public class RouteService {
         double totalDistance = distances.get(endId);
         boolean isSafe = checkPathSafety(path);
 
-        return new Route(path, totalDistance, isSafe);
+        List<Edge> routeEdges = new ArrayList<>();
+        for (int i = 0; i < path.size() - 1; i++) {
+            String from = path.get(i);
+            String to = path.get(i + 1);
+            edgeRepository.findByFromNodeIdAndToNodeId(from, to).ifPresent(routeEdges::add);
+        }
+
+        return new Route(path, routeEdges, totalDistance, isSafe);
     }
 
     // Helper method to build graph from nodes and edges
@@ -364,7 +371,17 @@ public class RouteService {
 
     private Route convertToRoute(RouteHistory history) {
         List<String> path = Arrays.asList(history.getRoutePath().split(","));
-        return new Route(path, history.getTotalDistance(), history.getIsSafe());
+
+        // Build list of edges for this path
+        List<Edge> routeEdges = new ArrayList<>();
+        for (int i = 0; i < path.size() - 1; i++) {
+            String from = path.get(i);
+            String to = path.get(i + 1);
+
+            edgeRepository.findByFromNodeIdAndToNodeId(from, to).ifPresent(routeEdges::add);
+        }
+
+        return new Route(path, routeEdges, history.getTotalDistance(), history.getIsSafe());
     }
 
     private void clearCacheForNode(String nodeId) {
@@ -466,4 +483,43 @@ public class RouteService {
             return Double.compare(this.distance, other.distance);
         }
     }
+
+    public Route findRouteToNearestShelter(double userLat, double userLon) {
+        // 1️⃣ Find nearest node to the user
+        Node nearestNode = nodeRepository.findNearestNode(userLat, userLon);
+        if (nearestNode == null) {
+            throw new RuntimeException("No nearby node found for user location");
+        }
+
+        logger.info("User at ({}, {}) mapped to nearest node {}", userLat, userLon, nearestNode.getNodeId());
+
+        // 2️⃣ Find nearest shelter
+        List<Node> shelters = nodeRepository.findByNodeType("SHELTER");
+        if (shelters.isEmpty()) {
+            throw new RuntimeException("No shelters available");
+        }
+
+        Node nearestShelter = shelters.stream()
+                .min(Comparator.comparingDouble(s -> distance(userLat, userLon, s.getLatitude(), s.getLongitude())))
+                .get();
+
+        logger.info("Nearest shelter is {} at ({}, {})", nearestShelter.getNodeId(),
+                nearestShelter.getLatitude(), nearestShelter.getLongitude());
+
+        // 3️⃣ Calculate safest route from nearest node to nearest shelter
+        return findSafestRoute(nearestNode.getNodeId(), nearestShelter.getNodeId());
+    }
+
+    // Haversine distance between two lat/lon points
+    private double distance(double lat1, double lon1, double lat2, double lon2) {
+        double R = 6371; // km
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLon/2) * Math.sin(dLon/2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
 }

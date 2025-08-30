@@ -16,6 +16,9 @@ public interface NodeRepository extends JpaRepository<Node, String> {
 
     List<Node> findByIsSafeTrue();
 
+    @Query("SELECT n FROM Node n ORDER BY (POWER(n.latitude - :lat, 2) + POWER(n.longitude - :lon, 2)) ASC LIMIT 1")
+    Node findNearestNode(@Param("lat") Double latitude, @Param("lon") Double longitude);
+
     @Query("SELECT n FROM Node n WHERE " +
             "n.latitude BETWEEN :minLat AND :maxLat AND " +
             "n.longitude BETWEEN :minLon AND :maxLon")
@@ -23,4 +26,6 @@ public interface NodeRepository extends JpaRepository<Node, String> {
                                @Param("maxLat") Double maxLat,
                                @Param("minLon") Double minLon,
                                @Param("maxLon") Double maxLon);
+
+    List<Node> findByNodeType(String nodeType);
 }

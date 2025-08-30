@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface EdgeRepository extends JpaRepository<Edge, String> {
@@ -21,4 +22,6 @@ public interface EdgeRepository extends JpaRepository<Edge, String> {
     @Query("SELECT e FROM Edge e WHERE " +
             "(e.fromNodeId = :nodeId OR e.toNodeId = :nodeId) AND e.isSafe = true")
     List<Edge> findEdgesConnectedToNode(@Param("nodeId") String nodeId);
+
+    Optional<Edge> findByFromNodeIdAndToNodeId(String fromNodeId, String toNodeId);
 }

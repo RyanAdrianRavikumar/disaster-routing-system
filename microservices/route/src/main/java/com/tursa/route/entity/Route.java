@@ -4,14 +4,16 @@ import java.util.List;
 
 public class Route {
     private List<String> path;
+    private List<Edge> edges;
     private Double totalDistance;
     private Boolean isSafe;
 
     // Constructors
     public Route() {}
 
-    public Route(List<String> path, Double totalDistance, Boolean isSafe) {
+    public Route(List<String> path, List<Edge> edges, Double totalDistance, Boolean isSafe) {
         this.path = path;
+        this.edges = edges;
         this.totalDistance = totalDistance;
         this.isSafe = isSafe;
     }
