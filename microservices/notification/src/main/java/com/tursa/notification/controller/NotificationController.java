@@ -142,7 +142,7 @@ public class NotificationController {
         }
     }
 
-    /*@GetMapping("/unread")
+    @GetMapping("/unread")
     public ResponseEntity<ApiResponse<List<Notification>>> getUnreadNotifications() {
         try {
             List<Notification> notifications = notificationService.getUnreadNotifications();
@@ -155,7 +155,7 @@ public class NotificationController {
         }
     }
 
-    @PutMapping("/{id}/read")
+    /*@PutMapping("/{id}/read")
     public ResponseEntity<ApiResponse<String>> markAsRead(@PathVariable Long id) {
         try {
             notificationService.markNotificationAsRead(id);
