@@ -93,7 +93,7 @@ public class NotificationController {
         }
     }
 
-    /*@PostMapping("/rescue-update")
+    @PostMapping("/rescue-update")
     public ResponseEntity<ApiResponse<Notification>> sendRescueUpdate(@RequestBody NotificationRequest request) {
         try {
             Notification notification = notificationService.sendRescueUpdate(
@@ -111,7 +111,7 @@ public class NotificationController {
         }
     }
 
-    @PostMapping("/info")
+    /*@PostMapping("/info")
     public ResponseEntity<ApiResponse<Notification>> sendInfoAlert(@RequestBody NotificationRequest request) {
         try {
             Notification notification = notificationService.sendInfoAlert(
