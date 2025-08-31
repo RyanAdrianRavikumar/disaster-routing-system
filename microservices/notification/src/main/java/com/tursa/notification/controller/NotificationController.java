@@ -183,7 +183,7 @@ public class NotificationController {
         }
     }
 
-    /*@GetMapping("/user/{userRfid}/unread-count")
+    @GetMapping("/user/{userRfid}/unread-count")
     public ResponseEntity<ApiResponse<Long>> getUnreadCount(@PathVariable String userRfid) {
         try {
             long count = notificationService.getUnreadCount(userRfid);
@@ -196,7 +196,7 @@ public class NotificationController {
         }
     }
 
-    @PostMapping("/broadcast")
+    /*@PostMapping("/broadcast")
     public ResponseEntity<ApiResponse<List<Notification>>> broadcastEmergencyAlert(@RequestBody BroadcastRequest request) {
         try {
             if (request.getUserRfids() == null || request.getUserRfids().isEmpty() || request.getMessage() == null) {
