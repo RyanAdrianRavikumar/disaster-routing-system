@@ -3,31 +3,35 @@ package com.tursa.route.config;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import jakarta.annotation.PostConstruct;
+import com.google.firebase.database.FirebaseDatabase;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 @Configuration
 public class FirebaseConfig {
-    @PostConstruct
-    public void initFirebase() {
-        try {
-            FileInputStream serviceAccount =
-                    new FileInputStream("src/main/resources/smart-evacuation-system-firebase-adminsdk-fbsvc-c2b2b3872d.json");
 
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .setDatabaseUrl("https://smart-evacuation-system-default-rtdb.asia-southeast1.firebasedatabase.app/") // replace with your Firebase DB URL
-                    .build();
+    @Bean
+    public FirebaseDatabase firebaseDatabase() throws IOException {
+        // Load service account key from resources folder
+        InputStream serviceAccount = getClass().getClassLoader()
+                .getResourceAsStream("serviceAccountKey.json");
 
-            if (FirebaseApp.getApps().isEmpty()) {
-                FirebaseApp.initializeApp(options);
-            }
-
-            System.out.println("Firebase initialized");
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize Firebase", e);
+        if (serviceAccount == null) {
+            throw new IOException("Firebase service account file not found in resources");
         }
+
+        FirebaseOptions options = FirebaseOptions.builder()
+                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                .setDatabaseUrl("https://smart-evacuation-system-default-rtdb.asia-southeast1.firebasedatabase.app/")
+                .build();
+
+        if (FirebaseApp.getApps().isEmpty()) {
+            FirebaseApp.initializeApp(options);
+        }
+
+        return FirebaseDatabase.getInstance();
     }
 }
