@@ -111,7 +111,7 @@ public class NotificationController {
         }
     }
 
-    /*@PostMapping("/info")
+    @PostMapping("/info")
     public ResponseEntity<ApiResponse<Notification>> sendInfoAlert(@RequestBody NotificationRequest request) {
         try {
             Notification notification = notificationService.sendInfoAlert(
@@ -129,7 +129,7 @@ public class NotificationController {
         }
     }
 
-    @GetMapping("/user/{userRfid}")
+    /*@GetMapping("/user/{userRfid}")
     public ResponseEntity<ApiResponse<List<Notification>>> getUserNotifications(@PathVariable String userRfid) {
         try {
             List<Notification> notifications = notificationService.getUserNotifications(userRfid);
