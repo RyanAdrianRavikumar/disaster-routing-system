@@ -196,7 +196,7 @@ public class NotificationController {
         }
     }
 
-    /*@PostMapping("/broadcast")
+    @PostMapping("/broadcast")
     public ResponseEntity<ApiResponse<List<Notification>>> broadcastEmergencyAlert(@RequestBody BroadcastRequest request) {
         try {
             if (request.getUserRfids() == null || request.getUserRfids().isEmpty() || request.getMessage() == null) {
@@ -216,5 +216,5 @@ public class NotificationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "Internal server error", null));
         }
-    }*/
+    }
 }
