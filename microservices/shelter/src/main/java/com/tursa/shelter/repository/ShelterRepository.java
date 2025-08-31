@@ -1,35 +1,38 @@
 package com.tursa.shelter.repository;
 
-import com.tursa.shelter.model.Shelter;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import com.google.firebase.database.*;
+import com.tursa.shelter.entity.Shelter;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Repository
-public interface ShelterRepository extends JpaRepository<Shelter, Long> {
-    @Query("SELECT s FROM Shelter s WHERE s.isActive = true AND s.currentOccupancy < s.maxCapacity ORDER BY s.maxCapacity DESC")
-    List<Shelter> findActiveSheltersWithCapacity();
+public class ShelterRepository {
 
-    @Query(value = "SELECT *, " +
-            "(6371 * ACOS(COS(RADIANS(:latitude)) * COS(RADIANS(latitude)) * " +
-            "COS(RADIANS(longitude) - RADIANS(:longitude)) + " +
-            "SIN(RADIANS(:latitude)) * SIN(RADIANS(latitude)))) AS distance " +
-            "FROM shelters WHERE is_active = true AND current_occupancy < max_capacity " +
-            "ORDER BY distance LIMIT 1",
-            nativeQuery = true)
-    Optional<Shelter> findNearestAvailableShelter(@Param("latitude") double latitude,
-                                                  @Param("longitude") double longitude);
+    private final DatabaseReference dbRef;
 
-    @Modifying
-    @Query("UPDATE Shelter s SET s.currentOccupancy = s.currentOccupancy + 1 WHERE s.id = :shelterId AND s.currentOccupancy < s.maxCapacity")
-    int incrementOccupancy(@Param("shelterId") Long shelterId);
+    public ShelterRepository() {
+        this.dbRef = FirebaseDatabase.getInstance().getReference("shelters");
+    }
 
-    @Modifying
-    @Query("UPDATE Shelter s SET s.currentOccupancy = s.currentOccupancy - 1 WHERE s.id = :shelterId AND s.currentOccupancy > 0")
-    int decrementOccupancy(@Param("shelterId") Long shelterId);
+    public void saveShelter(Shelter shelter) {
+        dbRef.child(shelter.getShelterId()).setValueAsync(shelter);
+    }
+
+    public CompletableFuture<Shelter> getShelter(String shelterId) {
+        CompletableFuture<Shelter> future = new CompletableFuture<>();
+        dbRef.child(shelterId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                Shelter shelter = snapshot.getValue(Shelter.class);
+                future.complete(shelter);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                future.completeExceptionally(error.toException());
+            }
+        });
+        return future;
+    }
 }

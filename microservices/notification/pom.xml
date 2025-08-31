@@ -48,11 +48,11 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Eureka client for service discovery -->
+		<!-- Eureka client for service discovery
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-		</dependency>
+		</dependency> -->
 
 		<!-- Lombok (optional, reduce boilerplate getters/setters) -->
 		<dependency>
