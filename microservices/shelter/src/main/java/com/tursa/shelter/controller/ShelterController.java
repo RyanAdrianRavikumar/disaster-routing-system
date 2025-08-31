@@ -1,6 +1,6 @@
 package com.tursa.shelter.controller;
 
-import com.tursa.shelter.model.Shelter;
+import com.tursa.shelter.entity.Shelter;
 import com.tursa.shelter.service.ShelterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

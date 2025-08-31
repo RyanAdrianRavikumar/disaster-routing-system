@@ -1,6 +1,6 @@
 package com.tursa.shelter.service;
 
-import com.tursa.shelter.model.Shelter;
+import com.tursa.shelter.entity.Shelter;
 import com.tursa.shelter.repository.ShelterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
