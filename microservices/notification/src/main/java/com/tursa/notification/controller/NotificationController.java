@@ -47,7 +47,7 @@ public class NotificationController {
         }
     }
 
-    /*@PostMapping("/route-update")
+    @PostMapping("/route-update")
     public ResponseEntity<ApiResponse<Notification>> sendRouteUpdate(@RequestBody NotificationRequest request) {
         try {
             if (request.getUserRfid() == null || request.getPhoneNumber() == null || request.getNewRoute() == null) {
@@ -216,5 +216,5 @@ public class NotificationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "Internal server error", null));
         }
-    }*/
+    }
 }
