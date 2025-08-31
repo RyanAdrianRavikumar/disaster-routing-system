@@ -129,7 +129,7 @@ public class NotificationController {
         }
     }
 
-    /*@GetMapping("/user/{userRfid}")
+    @GetMapping("/user/{userRfid}")
     public ResponseEntity<ApiResponse<List<Notification>>> getUserNotifications(@PathVariable String userRfid) {
         try {
             List<Notification> notifications = notificationService.getUserNotifications(userRfid);
@@ -142,7 +142,7 @@ public class NotificationController {
         }
     }
 
-    @GetMapping("/unread")
+    /*@GetMapping("/unread")
     public ResponseEntity<ApiResponse<List<Notification>>> getUnreadNotifications() {
         try {
             List<Notification> notifications = notificationService.getUnreadNotifications();
