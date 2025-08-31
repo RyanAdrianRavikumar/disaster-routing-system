@@ -47,7 +47,7 @@ public class NotificationController {
         }
     }
 
-    /*@PostMapping("/route-update")
+    @PostMapping("/route-update")
     public ResponseEntity<ApiResponse<Notification>> sendRouteUpdate(@RequestBody NotificationRequest request) {
         try {
             if (request.getUserRfid() == null || request.getPhoneNumber() == null || request.getNewRoute() == null) {
@@ -70,7 +70,7 @@ public class NotificationController {
         }
     }
 
-    @PostMapping("/emergency")
+    /*@PostMapping("/emergency")
     public ResponseEntity<ApiResponse<Notification>> sendEmergencyAlert(@RequestBody NotificationRequest request) {
         try {
             if (request.getUserRfid() == null || request.getPhoneNumber() == null || request.getMessage() == null) {
