@@ -13,16 +13,16 @@ const RescueQueueUI = () => {
     elderly: 0,
     specialNeeds: ''
   });
+  const [isEmpty, setIsEmpty] = useState(true);
+  const [isFull, setIsFull] = useState(false);
 
   // Calculate priority function
   const calculatePriority = useCallback((children, elderly) => {
-    // Simple priority calculation based on vulnerable members
     return children * 2 + elderly * 3;
   }, []);
 
   // Simulate queue data
   const simulateQueueData = useCallback((size) => {
-    // Simulated data for demonstration
     const simulatedQueue = Array.from({ length: size }, (_, i) => ({
       id: i + 1,
       name: `Family ${i + 1}`,
@@ -40,9 +40,10 @@ const RescueQueueUI = () => {
     try {
       const response = await fetch('/rescue/size');
       const size = await response.json();
-      // For demo purposes, we'll simulate some queue data
       if (size > 0) {
         simulateQueueData(size);
+      } else {
+        setQueue([]);
       }
     } catch (error) {
       console.error('Error fetching queue size:', error);
@@ -56,9 +57,26 @@ const RescueQueueUI = () => {
       if (response.ok) {
         const user = await response.json();
         setNextUser(user);
+      } else {
+        setNextUser(null);
       }
     } catch (error) {
       console.error('Error fetching next user:', error);
+    }
+  }, []);
+
+  // Fetch queue status (isEmpty, isFull)
+  const fetchQueueStatus = useCallback(async () => {
+    try {
+      const emptyResponse = await fetch('/rescue/isEmpty');
+      const emptyStatus = await emptyResponse.json();
+      setIsEmpty(emptyStatus);
+
+      const fullResponse = await fetch('/rescue/isFull');
+      const fullStatus = await fullResponse.json();
+      setIsFull(fullStatus);
+    } catch (error) {
+      console.error('Error fetching queue status:', error);
     }
   }, []);
 
@@ -66,7 +84,8 @@ const RescueQueueUI = () => {
   useEffect(() => {
     fetchQueueSize();
     fetchNextUser();
-  }, [fetchQueueSize, fetchNextUser]);
+    fetchQueueStatus();
+  }, [fetchQueueSize, fetchNextUser, fetchQueueStatus]);
 
   const handleRescueNext = async () => {
     setIsLoading(true);
@@ -75,9 +94,9 @@ const RescueQueueUI = () => {
       if (response.ok) {
         const rescuedUser = await response.json();
         setMessage(`Rescued: ${rescuedUser.name || 'Family'}`);
-        // Refresh queue data
         fetchQueueSize();
         fetchNextUser();
+        fetchQueueStatus();
       } else {
         setMessage('Queue is empty');
       }
@@ -116,9 +135,9 @@ const RescueQueueUI = () => {
           elderly: 0,
           specialNeeds: ''
         });
-        // Refresh queue data
         fetchQueueSize();
         fetchNextUser();
+        fetchQueueStatus();
       }
     } catch (error) {
       console.error('Error adding family:', error);
@@ -156,6 +175,14 @@ const RescueQueueUI = () => {
             <h3>Status</h3>
             <p className="stat-number">{queue.length > 0 ? 'Active' : 'Empty'}</p>
           </div>
+          <div className="stat-card">
+            <h3>Queue Empty?</h3>
+            <p className="stat-number">{isEmpty ? 'Yes' : 'No'}</p>
+          </div>
+          <div className="stat-card">
+            <h3>Queue Full?</h3>
+            <p className="stat-number">{isFull ? 'Yes' : 'No'}</p>
+          </div>
         </div>
 
         {message && (
@@ -189,66 +216,6 @@ const RescueQueueUI = () => {
             ) : (
               <p>No families currently in the queue.</p>
             )}
-          </div>
-
-          <div className="add-family-section">
-            <h2>Add Family to Rescue Queue</h2>
-            <form onSubmit={handleAddFamily} className="family-form">
-              <div className="form-group">
-                <label>Family Name:</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={newFamily.name}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Address:</label>
-                <input
-                  type="text"
-                  name="address"
-                  value={newFamily.address}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Number of Children:</label>
-                  <input
-                    type="number"
-                    name="children"
-                    value={newFamily.children}
-                    onChange={handleInputChange}
-                    min="0"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Number of Elderly:</label>
-                  <input
-                    type="number"
-                    name="elderly"
-                    value={newFamily.elderly}
-                    onChange={handleInputChange}
-                    min="0"
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Special Needs:</label>
-                <textarea
-                  name="specialNeeds"
-                  value={newFamily.specialNeeds}
-                  onChange={handleInputChange}
-                  rows="3"
-                />
-              </div>
-              <button type="submit" disabled={isLoading} className="add-btn">
-                {isLoading ? 'Adding...' : 'Add to Queue'}
-              </button>
-            </form>
           </div>
         </div>
 
