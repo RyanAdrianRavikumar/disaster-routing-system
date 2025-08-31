@@ -155,7 +155,7 @@ public class NotificationController {
         }
     }
 
-    /*@PutMapping("/{id}/read")
+    @PutMapping("/{id}/read")
     public ResponseEntity<ApiResponse<String>> markAsRead(@PathVariable Long id) {
         try {
             notificationService.markNotificationAsRead(id);
@@ -170,7 +170,7 @@ public class NotificationController {
         }
     }
 
-    @PutMapping("/user/{userRfid}/read-all")
+    /*@PutMapping("/user/{userRfid}/read-all")
     public ResponseEntity<ApiResponse<Integer>> markAllAsRead(@PathVariable String userRfid) {
         try {
             int count = notificationService.markAllAsReadForUser(userRfid);
