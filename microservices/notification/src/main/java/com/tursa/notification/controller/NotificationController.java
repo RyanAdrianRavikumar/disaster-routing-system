@@ -70,7 +70,7 @@ public class NotificationController {
         }
     }
 
-    /*@PostMapping("/emergency")
+    @PostMapping("/emergency")
     public ResponseEntity<ApiResponse<Notification>> sendEmergencyAlert(@RequestBody NotificationRequest request) {
         try {
             if (request.getUserRfid() == null || request.getPhoneNumber() == null || request.getMessage() == null) {
@@ -93,7 +93,7 @@ public class NotificationController {
         }
     }
 
-    @PostMapping("/rescue-update")
+    /*@PostMapping("/rescue-update")
     public ResponseEntity<ApiResponse<Notification>> sendRescueUpdate(@RequestBody NotificationRequest request) {
         try {
             Notification notification = notificationService.sendRescueUpdate(
