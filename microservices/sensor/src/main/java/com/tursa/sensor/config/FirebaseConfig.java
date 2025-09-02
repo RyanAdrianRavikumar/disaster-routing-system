@@ -18,7 +18,7 @@ public class FirebaseConfig {
             if (FirebaseApp.getApps().isEmpty()) {
                 // Load the service account key from resources folder
                 InputStream serviceAccount = getClass().getClassLoader()
-                        .getResourceAsStream("serviceAccountKey.json");
+                        .getResourceAsStream("disasterhub-fbe9c-firebase-adminsdk-fbsvc-ad7e354428.json");
 
                 if (serviceAccount == null) {
                     throw new IOException("Firebase serviceAccountKey.json not found in resources folder!");
@@ -26,7 +26,7 @@ public class FirebaseConfig {
 
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                        .setDatabaseUrl("https://smart-evacuation-system-default-rtdb.asia-southeast1.firebasedatabase.app/")
+                        .setDatabaseUrl("https://disasterhub-fbe9c-default-rtdb.asia-southeast1.firebasedatabase.app/")
                         .build();
 
                 FirebaseApp.initializeApp(options);

@@ -31,3 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
+
+src/main/resources/disasterhub-fbe9c-firebase-adminsdk-fbsvc-ad7e354428.json

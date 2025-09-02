@@ -33,4 +33,4 @@ build/
 .vscode/
 
 # Firebase service account
-/src/main/resources/smart-evacuation-system-firebase-adminsdk-fbsvc-c2b2b3872d
+src/main/resources/disasterhub-fbe9c-firebase-adminsdk-fbsvc-ad7e354428.json

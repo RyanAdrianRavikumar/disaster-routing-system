@@ -16,8 +16,7 @@ public class SensorController {
     }
 
     @PostMapping("/record")
-    public String recordSensor(@RequestParam String sensorId,
-                               @RequestParam String data) {
+    public String recordSensor(@RequestParam String sensorId, @RequestParam String data) {
         return sensorService.recordSensorData(sensorId, data);
     }
 

@@ -1,88 +1,124 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/RouteManagementUI.css';
+import { MapPin, Route, Settings, RefreshCw, Zap, ZapOff, Navigation, Database } from 'lucide-react';
 
 const RouteManagementUI = () => {
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
-  const [startNode, setStartNode] = useState('');
-  const [endNode, setEndNode] = useState('');
-  const [shortestPath, setShortestPath] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [routeQuery, setRouteQuery] = useState({ start: '', end: '' });
+  const [routeResult, setRouteResult] = useState(null);
   const [message, setMessage] = useState('');
-  const [selectedNode, setSelectedNode] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('pathfinding');
 
-  // Fetch nodes and edges on component mount
-  useEffect(() => {
-    fetchNodes();
-    fetchEdges();
-  }, []);
+  const API_BASE = 'http://localhost:8080';
 
+  // Fetch nodes from backend
   const fetchNodes = async () => {
     try {
-      const response = await fetch('/route/nodes');
-      if (response.ok) {
-        const nodesData = await response.json();
-        setNodes(nodesData);
+      const res = await fetch(`${API_BASE}/route/nodes`);
+      if (res.ok) {
+        const data = await res.json();
+        setNodes(data);
+        return true;
+      } else {
+        setMessage('Failed to fetch nodes');
+        return false;
       }
     } catch (error) {
       console.error('Error fetching nodes:', error);
-      setMessage('Error fetching nodes');
+      setMessage('Error connecting to server');
+      return false;
     }
   };
 
+  // Fetch edges from backend
   const fetchEdges = async () => {
     try {
-      const response = await fetch('/route/edges');
-      if (response.ok) {
-        const edgesData = await response.json();
-        setEdges(edgesData);
+      const res = await fetch(`${API_BASE}/route/edges`);
+      if (res.ok) {
+        const data = await res.json();
+        setEdges(data);
+        return true;
+      } else {
+        setMessage('Failed to fetch edges');
+        return false;
       }
     } catch (error) {
       console.error('Error fetching edges:', error);
-      setMessage('Error fetching edges');
+      setMessage('Error connecting to server');
+      return false;
     }
   };
 
-  const handleFindShortestPath = async () => {
-    if (!startNode || !endNode) {
-      setMessage('Please select both start and end nodes');
-      return;
-    }
-
-    if (startNode === endNode) {
-      setMessage('Start and end nodes cannot be the same');
-      return;
-    }
-
+  // Fetch all data
+  const fetchAllData = async () => {
     setIsLoading(true);
-    try {
-      const response = await fetch(`/route/shortest-path?start=${startNode}&end=${endNode}`);
-      if (response.ok) {
-        const pathData = await response.json();
-        setShortestPath(pathData);
-        setMessage('Shortest path found successfully');
-      } else {
-        setMessage('Error finding shortest path');
-      }
-    } catch (error) {
-      console.error('Error finding shortest path:', error);
-      setMessage('Error finding shortest path');
+    const [nodesSuccess, edgesSuccess] = await Promise.all([
+      fetchNodes(),
+      fetchEdges()
+    ]);
+    
+    if (nodesSuccess && edgesSuccess) {
+      setMessage('Data loaded successfully');
     }
     setIsLoading(false);
   };
 
-  const handleInitData = async () => {
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  // Find shortest path
+  const findShortestPath = async () => {
+    if (!routeQuery.start.trim() || !routeQuery.end.trim()) {
+      setMessage('Please enter both start and end nodes');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const response = await fetch('/admin/init-data', { method: 'POST' });
-      if (response.ok) {
-        const result = await response.text();
-        setMessage(result);
-        // Refresh data
-        fetchNodes();
-        fetchEdges();
+      const res = await fetch(
+        `${API_BASE}/route/shortest-path?start=${encodeURIComponent(
+          routeQuery.start.trim()
+        )}&end=${encodeURIComponent(routeQuery.end.trim())}`
+      );
+
+      if (res.ok) {
+        const result = await res.json();
+        setRouteResult(result);
+        
+        if (result.path && result.path.length > 0) {
+          setMessage(
+            `Path found: ${result.path.join(' → ')} (Distance: ${result.distance.toFixed(2)})`
+          );
+        } else {
+          setMessage('No path found between the specified nodes');
+        }
       } else {
-        setMessage('Error initializing data');
+        const errorText = await res.text();
+        setMessage(`Error: ${errorText}`);
+      }
+    } catch (error) {
+      console.error('Error finding path:', error);
+      setMessage('Error during pathfinding');
+    }
+    setIsLoading(false);
+  };
+
+  // Initialize sample data
+  const initSampleData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/init-data`, {
+        method: 'POST'
+      });
+
+      if (res.ok) {
+        const result = await res.text();
+        setMessage(result);
+        await fetchAllData();
+      } else {
+        setMessage('Failed to initialize data');
       }
     } catch (error) {
       console.error('Error initializing data:', error);
@@ -91,21 +127,26 @@ const RouteManagementUI = () => {
     setIsLoading(false);
   };
 
-  const handleClearData = async () => {
+  // Clear all data
+  const clearAllData = async () => {
+    if (!window.confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const response = await fetch('/admin/clear-data', { method: 'POST' });
-      if (response.ok) {
-        const result = await response.text();
+      const res = await fetch(`${API_BASE}/admin/clear-data`, {
+        method: 'POST'
+      });
+
+      if (res.ok) {
+        const result = await res.text();
         setMessage(result);
-        // Clear local state
         setNodes([]);
         setEdges([]);
-        setStartNode('');
-        setEndNode('');
-        setShortestPath(null);
+        setRouteResult(null);
       } else {
-        setMessage('Error clearing data');
+        setMessage('Failed to clear data');
       }
     } catch (error) {
       console.error('Error clearing data:', error);
@@ -114,177 +155,363 @@ const RouteManagementUI = () => {
     setIsLoading(false);
   };
 
-  const getNodeName = (nodeId) => {
-    const node = nodes.find(n => n.id === nodeId);
-    return node ? node.name : nodeId;
+  const styles = {
+    container: {
+      padding: '20px',
+      fontFamily: 'Arial, sans-serif',
+      maxWidth: '1400px',
+      margin: '0 auto',
+      backgroundColor: '#f8f9fa'
+    },
+    header: {
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: 'white',
+      padding: '30px',
+      textAlign: 'center',
+      borderRadius: '12px',
+      marginBottom: '20px',
+      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+    },
+    message: {
+      padding: '12px 16px',
+      backgroundColor: '#e3f2fd',
+      border: '1px solid #1976d2',
+      borderRadius: '8px',
+      marginBottom: '20px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+    },
+    tabs: {
+      display: 'flex',
+      marginBottom: '20px',
+      backgroundColor: 'white',
+      borderRadius: '8px',
+      overflow: 'hidden',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+    },
+    tab: {
+      flex: 1,
+      padding: '12px 20px',
+      cursor: 'pointer',
+      border: 'none',
+      backgroundColor: 'transparent',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '8px',
+      transition: 'all 0.2s ease'
+    },
+    activeTab: {
+      backgroundColor: '#667eea',
+      color: 'white'
+    },
+    content: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '20px'
+    },
+    panel: {
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: '20px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+    },
+    fullWidthPanel: {
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: '20px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      gridColumn: '1 / -1'
+    },
+    input: {
+      width: '100%',
+      padding: '12px',
+      border: '1px solid #ddd',
+      borderRadius: '6px',
+      marginBottom: '10px',
+      fontSize: '14px'
+    },
+    button: {
+      padding: '12px 20px',
+      backgroundColor: '#667eea',
+      color: 'white',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '8px',
+      fontSize: '14px',
+      fontWeight: '500',
+      transition: 'all 0.2s ease'
+    },
+    buttonSuccess: {
+      backgroundColor: '#28a745'
+    },
+    buttonWarning: {
+      backgroundColor: '#fd7e14'
+    },
+    buttonDanger: {
+      backgroundColor: '#dc3545'
+    },
+    buttonDisabled: {
+      backgroundColor: '#ccc',
+      cursor: 'not-allowed'
+    },
+    grid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+      gap: '12px',
+      marginTop: '15px'
+    },
+    card: {
+      border: '1px solid #e0e0e0',
+      borderRadius: '8px',
+      padding: '12px',
+      backgroundColor: '#f9f9f9'
+    },
+    edgeCard: {
+      border: '1px solid #e0e0e0',
+      borderRadius: '8px',
+      padding: '12px',
+      backgroundColor: '#f9f9f9',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    },
+    pathResult: {
+      backgroundColor: '#e8f5e8',
+      border: '2px solid #28a745',
+      borderRadius: '8px',
+      padding: '15px',
+      marginTop: '15px'
+    },
+    routeStep: {
+      display: 'inline-block',
+      padding: '4px 8px',
+      backgroundColor: '#667eea',
+      color: 'white',
+      borderRadius: '4px',
+      margin: '2px',
+      fontSize: '12px'
+    }
   };
 
-  const getConnectedEdges = (nodeId) => {
-    return edges.filter(edge => edge.source === nodeId || edge.target === nodeId);
-  };
+  const renderPathfindingTab = () => (
+    <div style={styles.content}>
+      <div style={styles.panel}>
+        <h3 style={{ margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Navigation size={20} />
+          Find Shortest Path
+        </h3>
+        
+        <input
+          type="text"
+          value={routeQuery.start}
+          onChange={e => setRouteQuery({ ...routeQuery, start: e.target.value })}
+          placeholder="Start Node (e.g., A)"
+          style={styles.input}
+        />
+        
+        <input
+          type="text"
+          value={routeQuery.end}
+          onChange={e => setRouteQuery({ ...routeQuery, end: e.target.value })}
+          placeholder="End Node (e.g., E)"
+          style={styles.input}
+          onKeyPress={e => e.key === 'Enter' && findShortestPath()}
+        />
+        
+        <button
+          onClick={findShortestPath}
+          disabled={isLoading || !routeQuery.start.trim() || !routeQuery.end.trim()}
+          style={{
+            ...styles.button,
+            ...styles.buttonSuccess,
+            ...(isLoading || !routeQuery.start.trim() || !routeQuery.end.trim() ? styles.buttonDisabled : {})
+          }}
+        >
+          <Route size={16} />
+          {isLoading ? 'Finding Path...' : 'Find Path'}
+        </button>
 
-  return (
-    <div className="route-container">
-      <header className="app-header">
-        <h1>Route Management System</h1>
-        <p>Find shortest paths between locations</p>
-      </header>
-
-      <div className="route-dashboard">
-        {message && (
-          <div className="message-banner">
-            {message}
-            <button onClick={() => setMessage('')} className="close-btn">×</button>
+        {routeResult && routeResult.path && routeResult.path.length > 0 && (
+          <div style={styles.pathResult}>
+            <h4 style={{ margin: '0 0 10px 0' }}>Path Found:</h4>
+            <div style={{ marginBottom: '10px' }}>
+              {routeResult.path.map((node, index) => (
+                <span key={index}>
+                  <span style={styles.routeStep}>{node}</span>
+                  {index < routeResult.path.length - 1 && ' → '}
+                </span>
+              ))}
+            </div>
+            <p style={{ margin: '5px 0', fontWeight: 'bold' }}>
+              Total Distance: {routeResult.distance.toFixed(2)}
+            </p>
           </div>
         )}
-
-        <div className="admin-panel">
-          <h2>Data Management</h2>
-          <div className="admin-actions">
-            <button 
-              onClick={handleInitData} 
-              disabled={isLoading}
-              className="admin-btn init-btn"
-            >
-              {isLoading ? 'Initializing...' : 'Initialize Sample Data'}
-            </button>
-            <button 
-              onClick={handleClearData} 
-              disabled={isLoading}
-              className="admin-btn clear-btn"
-            >
-              {isLoading ? 'Clearing...' : 'Clear All Data'}
-            </button>
-          </div>
-        </div>
-
-        <div className="route-content">
-          <div className="path-finder-section">
-            <h2>Find Shortest Path</h2>
-            <div className="path-inputs">
-              <div className="input-group">
-                <label>Start Node:</label>
-                <select 
-                  value={startNode} 
-                  onChange={(e) => setStartNode(e.target.value)}
-                  disabled={nodes.length === 0}
-                >
-                  <option value="">Select start node</option>
-                  {nodes.map(node => (
-                    <option key={node.id} value={node.id}>{node.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="input-group">
-                <label>End Node:</label>
-                <select 
-                  value={endNode} 
-                  onChange={(e) => setEndNode(e.target.value)}
-                  disabled={nodes.length === 0}
-                >
-                  <option value="">Select end node</option>
-                  {nodes.map(node => (
-                    <option key={node.id} value={node.id}>{node.name}</option>
-                  ))}
-                </select>
-              </div>
-              <button 
-                onClick={handleFindShortestPath} 
-                disabled={isLoading || !startNode || !endNode}
-                className="find-path-btn"
-              >
-                {isLoading ? 'Finding Path...' : 'Find Shortest Path'}
-              </button>
-            </div>
-
-            {shortestPath && (
-              <div className="path-result">
-                <h3>Shortest Path Result</h3>
-                <div className="path-details">
-                  <div className="path-info">
-                    <span className="info-label">Total Distance:</span>
-                    <span className="info-value">{shortestPath.distance} units</span>
-                  </div>
-                  <div className="path-info">
-                    <span className="info-label">Path:</span>
-                    <div className="path-nodes">
-                      {shortestPath.path.map((nodeId, index) => (
-                        <React.Fragment key={nodeId}>
-                          <span className="path-node">{getNodeName(nodeId)}</span>
-                          {index < shortestPath.path.length - 1 && (
-                            <span className="path-arrow">→</span>
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="data-sections">
-            <div className="nodes-section">
-              <h2>Nodes ({nodes.length})</h2>
-              {nodes.length > 0 ? (
-                <div className="nodes-list">
-                  {nodes.map(node => (
-                    <div 
-                      key={node.id} 
-                      className={`node-card ${selectedNode?.id === node.id ? 'selected' : ''}`}
-                      onClick={() => setSelectedNode(node)}
-                    >
-                      <h4>{node.name}</h4>
-                      <p className="node-id">ID: {node.id}</p>
-                      {selectedNode?.id === node.id && (
-                        <div className="node-connections">
-                          <h5>Connected to:</h5>
-                          {getConnectedEdges(node.id).map(edge => {
-                            const connectedNodeId = edge.source === node.id ? edge.target : edge.source;
-                            const connectedNode = nodes.find(n => n.id === connectedNodeId);
-                            return (
-                              <div key={edge.id} className="connection">
-                                <span>{connectedNode ? connectedNode.name : connectedNodeId}</span>
-                                <span className="connection-distance">{edge.distance} units</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="empty-data">No nodes available. Initialize sample data first.</p>
-              )}
-            </div>
-
-            <div className="edges-section">
-              <h2>Edges ({edges.length})</h2>
-              {edges.length > 0 ? (
-                <div className="edges-list">
-                  {edges.map(edge => {
-                    const sourceNode = nodes.find(n => n.id === edge.source);
-                    const targetNode = nodes.find(n => n.id === edge.target);
-                    return (
-                      <div key={edge.id} className="edge-card">
-                        <div className="edge-connection">
-                          <span className="node-name">{sourceNode ? sourceNode.name : edge.source}</span>
-                          <span className="connection-arrow">↔</span>
-                          <span className="node-name">{targetNode ? targetNode.name : edge.target}</span>
-                        </div>
-                        <div className="edge-distance">{edge.distance} units</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="empty-data">No edges available. Initialize sample data first.</p>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
+
+      <div style={styles.panel}>
+        <h3 style={{ margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <RefreshCw size={20} />
+          Quick Actions
+        </h3>
+        
+        <button
+          onClick={fetchAllData}
+          disabled={isLoading}
+          style={{
+            ...styles.button,
+            marginBottom: '10px',
+            ...(isLoading ? styles.buttonDisabled : {})
+          }}
+        >
+          <RefreshCw size={16} />
+          Refresh Data
+        </button>
+
+        <button
+          onClick={initSampleData}
+          disabled={isLoading}
+          style={{
+            ...styles.button,
+            ...styles.buttonSuccess,
+            marginBottom: '10px',
+            ...(isLoading ? styles.buttonDisabled : {})
+          }}
+        >
+          <Database size={16} />
+          Initialize Sample Data
+        </button>
+
+        <button
+          onClick={clearAllData}
+          disabled={isLoading}
+          style={{
+            ...styles.button,
+            ...styles.buttonDanger,
+            ...(isLoading ? styles.buttonDisabled : {})
+          }}
+        >
+          <Database size={16} />
+          Clear All Data
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderDataTab = () => (
+    <div style={styles.content}>
+      <div style={styles.panel}>
+        <h3 style={{ margin: '0 0 15px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <MapPin size={20} />
+          Nodes ({nodes.length})
+        </h3>
+        
+        {nodes.length === 0 ? (
+          <p style={{ color: '#666', fontStyle: 'italic' }}>No nodes found. Initialize sample data to get started.</p>
+        ) : (
+          <div style={styles.grid}>
+            {nodes.map(node => (
+              <div key={node.id} style={styles.card}>
+                <h4 style={{ margin: '0 0 5px 0', color: '#333' }}>{node.id}</h4>
+                <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>{node.name}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={styles.panel}>
+        <h3 style={{ margin: '0 0 15px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Route size={20} />
+          Edges ({edges.length})
+        </h3>
+        
+        {edges.length === 0 ? (
+          <p style={{ color: '#666', fontStyle: 'italic' }}>No edges found. Initialize sample data to get started.</p>
+        ) : (
+          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            {edges.map((edge, index) => (
+              <div key={index} style={styles.edgeCard}>
+                <div>
+                  <strong>{edge.from} → {edge.to}</strong>
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                    Weight: {edge.weight}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  {edge.blocked ? (
+                    <ZapOff size={16} style={{ color: '#dc3545' }} />
+                  ) : (
+                    <Zap size={16} style={{ color: '#28a745' }} />
+                  )}
+                  <span style={{ 
+                    fontSize: '12px', 
+                    color: edge.blocked ? '#dc3545' : '#28a745',
+                    fontWeight: 'bold'
+                  }}>
+                    {edge.blocked ? 'Blocked' : 'Open'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={styles.container}>
+      <header style={styles.header}>
+        <h1 style={{ margin: '0 0 10px 0' }}>🗺️ Route Management Dashboard</h1>
+        <p style={{ margin: 0, opacity: 0.9 }}>Manage nodes, edges, and find optimal paths</p>
+      </header>
+
+      {message && (
+        <div style={styles.message}>
+          <span>{message}</span>
+          <button 
+            onClick={() => setMessage('')}
+            style={{ border: 'none', background: 'none', fontSize: '20px', cursor: 'pointer' }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      <div style={styles.tabs}>
+        <button
+          style={{
+            ...styles.tab,
+            ...(activeTab === 'pathfinding' ? styles.activeTab : {})
+          }}
+          onClick={() => setActiveTab('pathfinding')}
+        >
+          <Navigation size={18} />
+          Pathfinding
+        </button>
+        <button
+          style={{
+            ...styles.tab,
+            ...(activeTab === 'data' ? styles.activeTab : {})
+          }}
+          onClick={() => setActiveTab('data')}
+        >
+          <Settings size={18} />
+          Data View
+        </button>
+      </div>
+
+      {activeTab === 'pathfinding' && renderPathfindingTab()}
+      {activeTab === 'data' && renderDataTab()}
     </div>
   );
 };
