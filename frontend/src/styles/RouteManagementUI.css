@@ -61,6 +61,35 @@
   color: #333;
 }
 
+.tabs {
+  display: flex;
+  margin-bottom: 25px;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tab {
+  flex: 1;
+  padding: 12px 20px;
+  cursor: pointer;
+  border: none;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.active-tab {
+  background-color: #1a75bc;
+  color: white;
+}
+
 .admin-panel {
   background: white;
   padding: 20px;
@@ -74,6 +103,9 @@
   color: #1a75bc;
   border-bottom: 2px solid #f0f0f0;
   padding-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .admin-actions {
@@ -88,6 +120,9 @@
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .init-btn {
@@ -137,6 +172,9 @@
   color: #1a75bc;
   border-bottom: 2px solid #f0f0f0;
   padding-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .path-inputs {
@@ -157,7 +195,7 @@
   color: #555;
 }
 
-.input-group select {
+.input-group input {
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -165,7 +203,7 @@
   transition: all 0.3s ease;
 }
 
-.input-group select:focus {
+.input-group input:focus {
   outline: none;
   border-color: #1a75bc;
   box-shadow: 0 0 0 3px rgba(26, 117, 188, 0.1);
@@ -181,6 +219,9 @@
   cursor: pointer;
   transition: all 0.3s ease;
   height: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .find-path-btn:hover:not(:disabled) {
@@ -269,6 +310,9 @@
   color: #1a75bc;
   border-bottom: 2px solid #f0f0f0;
   padding-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .nodes-list, .edges-list {
@@ -293,11 +337,6 @@
   transform: translateX(5px);
 }
 
-.node-card.selected {
-  background-color: #f0f7ff;
-  border-color: #1a75bc;
-}
-
 .node-card h4 {
   margin: 0 0 5px;
   color: #333;
@@ -307,31 +346,6 @@
   margin: 0;
   color: #666;
   font-size: 0.9rem;
-}
-
-.node-connections {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-}
-
-.node-connections h5 {
-  margin: 0 0 10px;
-  color: #555;
-}
-
-.connection {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px;
-  background: #f5f5f5;
-  border-radius: 4px;
-  margin-bottom: 5px;
-}
-
-.connection-distance {
-  font-weight: 500;
-  color: #1a75bc;
 }
 
 .edge-card {
@@ -363,12 +377,35 @@
   color: #666;
 }
 
+.edge-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
 .edge-distance {
   background: #e3f2fd;
   color: #1565c0;
   padding: 4px 10px;
   border-radius: 12px;
   font-weight: 500;
+}
+
+.edge-status {
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.edge-status.open {
+  color: #28a745;
+}
+
+.edge-status.blocked {
+  color: #dc3545;
 }
 
 .empty-data {
@@ -428,5 +465,20 @@
   
   .info-label {
     min-width: auto;
+  }
+  
+  .edge-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .edge-info {
+    align-items: flex-start;
+  }
+  
+  .tab {
+    font-size: 14px;
+    padding: 10px 15px;
   }
 }

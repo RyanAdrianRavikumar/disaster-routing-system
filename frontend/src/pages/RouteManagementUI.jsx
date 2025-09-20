@@ -1,5 +1,63 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Route, Settings, RefreshCw, Zap, ZapOff, Navigation, Database } from 'lucide-react';
+import '../styles/RouteManagementUI.css';
+
+// SVG Icons
+const NavigationIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polygon points="12 2 19 21 12 17 5 21 12 2"></polygon>
+  </svg>
+);
+
+const RefreshIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+  </svg>
+);
+
+const DatabaseIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+  </svg>
+);
+
+const MapPinIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+    <circle cx="12" cy="10" r="3"></circle>
+  </svg>
+);
+
+const RouteIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="6" cy="19" r="3"></circle>
+    <circle cx="18" cy="5" r="3"></circle>
+    <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path>
+  </svg>
+);
+
+const SettingsIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="3"></circle>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+    <polyline points="20 6 9 17 4 12"></polyline>
+  </svg>
+);
+
+const XIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
+  </svg>
+);
 
 const RouteManagementUI = () => {
   const [nodes, setNodes] = useState([]);
@@ -155,309 +213,159 @@ const RouteManagementUI = () => {
     setIsLoading(false);
   };
 
-  const styles = {
-    container: {
-      padding: '20px',
-      fontFamily: 'Arial, sans-serif',
-      maxWidth: '1400px',
-      margin: '0 auto',
-      backgroundColor: '#f8f9fa'
-    },
-    header: {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      color: 'white',
-      padding: '30px',
-      textAlign: 'center',
-      borderRadius: '12px',
-      marginBottom: '20px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-    },
-    message: {
-      padding: '12px 16px',
-      backgroundColor: '#e3f2fd',
-      border: '1px solid #1976d2',
-      borderRadius: '8px',
-      marginBottom: '20px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-    },
-    tabs: {
-      display: 'flex',
-      marginBottom: '20px',
-      backgroundColor: 'white',
-      borderRadius: '8px',
-      overflow: 'hidden',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-    },
-    tab: {
-      flex: 1,
-      padding: '12px 20px',
-      cursor: 'pointer',
-      border: 'none',
-      backgroundColor: 'transparent',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '8px',
-      transition: 'all 0.2s ease'
-    },
-    activeTab: {
-      backgroundColor: '#667eea',
-      color: 'white'
-    },
-    content: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: '20px'
-    },
-    panel: {
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: '20px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-    },
-    fullWidthPanel: {
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: '20px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      gridColumn: '1 / -1'
-    },
-    input: {
-      width: '100%',
-      padding: '12px',
-      border: '1px solid #ddd',
-      borderRadius: '6px',
-      marginBottom: '10px',
-      fontSize: '14px'
-    },
-    button: {
-      padding: '12px 20px',
-      backgroundColor: '#667eea',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      width: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '8px',
-      fontSize: '14px',
-      fontWeight: '500',
-      transition: 'all 0.2s ease'
-    },
-    buttonSuccess: {
-      backgroundColor: '#28a745'
-    },
-    buttonWarning: {
-      backgroundColor: '#fd7e14'
-    },
-    buttonDanger: {
-      backgroundColor: '#dc3545'
-    },
-    buttonDisabled: {
-      backgroundColor: '#ccc',
-      cursor: 'not-allowed'
-    },
-    grid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-      gap: '12px',
-      marginTop: '15px'
-    },
-    card: {
-      border: '1px solid #e0e0e0',
-      borderRadius: '8px',
-      padding: '12px',
-      backgroundColor: '#f9f9f9'
-    },
-    edgeCard: {
-      border: '1px solid #e0e0e0',
-      borderRadius: '8px',
-      padding: '12px',
-      backgroundColor: '#f9f9f9',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    },
-    pathResult: {
-      backgroundColor: '#e8f5e8',
-      border: '2px solid #28a745',
-      borderRadius: '8px',
-      padding: '15px',
-      marginTop: '15px'
-    },
-    routeStep: {
-      display: 'inline-block',
-      padding: '4px 8px',
-      backgroundColor: '#667eea',
-      color: 'white',
-      borderRadius: '4px',
-      margin: '2px',
-      fontSize: '12px'
-    }
-  };
-
   const renderPathfindingTab = () => (
-    <div style={styles.content}>
-      <div style={styles.panel}>
-        <h3 style={{ margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Navigation size={20} />
+    <div className="route-content">
+      <div className="path-finder-section">
+        <h2>
+          <NavigationIcon />
           Find Shortest Path
-        </h3>
+        </h2>
         
-        <input
-          type="text"
-          value={routeQuery.start}
-          onChange={e => setRouteQuery({ ...routeQuery, start: e.target.value })}
-          placeholder="Start Node (e.g., A)"
-          style={styles.input}
-        />
-        
-        <input
-          type="text"
-          value={routeQuery.end}
-          onChange={e => setRouteQuery({ ...routeQuery, end: e.target.value })}
-          placeholder="End Node (e.g., E)"
-          style={styles.input}
-          onKeyPress={e => e.key === 'Enter' && findShortestPath()}
-        />
-        
-        <button
-          onClick={findShortestPath}
-          disabled={isLoading || !routeQuery.start.trim() || !routeQuery.end.trim()}
-          style={{
-            ...styles.button,
-            ...styles.buttonSuccess,
-            ...(isLoading || !routeQuery.start.trim() || !routeQuery.end.trim() ? styles.buttonDisabled : {})
-          }}
-        >
-          <Route size={16} />
-          {isLoading ? 'Finding Path...' : 'Find Path'}
-        </button>
+        <div className="path-inputs">
+          <div className="input-group">
+            <label>Start Node</label>
+            <input
+              type="text"
+              value={routeQuery.start}
+              onChange={e => setRouteQuery({ ...routeQuery, start: e.target.value })}
+              placeholder="Start Node (e.g., A)"
+            />
+          </div>
+          
+          <div className="input-group">
+            <label>End Node</label>
+            <input
+              type="text"
+              value={routeQuery.end}
+              onChange={e => setRouteQuery({ ...routeQuery, end: e.target.value })}
+              placeholder="End Node (e.g., E)"
+              onKeyPress={e => e.key === 'Enter' && findShortestPath()}
+            />
+          </div>
+          
+          <button
+            onClick={findShortestPath}
+            disabled={isLoading || !routeQuery.start.trim() || !routeQuery.end.trim()}
+            className="find-path-btn"
+          >
+            <RouteIcon />
+            {isLoading ? 'Finding Path...' : 'Find Path'}
+          </button>
+        </div>
 
         {routeResult && routeResult.path && routeResult.path.length > 0 && (
-          <div style={styles.pathResult}>
-            <h4 style={{ margin: '0 0 10px 0' }}>Path Found:</h4>
-            <div style={{ marginBottom: '10px' }}>
-              {routeResult.path.map((node, index) => (
-                <span key={index}>
-                  <span style={styles.routeStep}>{node}</span>
-                  {index < routeResult.path.length - 1 && ' → '}
-                </span>
-              ))}
+          <div className="path-result">
+            <h3>Path Found:</h3>
+            <div className="path-details">
+              <div className="path-info">
+                <span className="info-label">Route:</span>
+                <div className="path-nodes">
+                  {routeResult.path.map((node, index) => (
+                    <span key={index}>
+                      <span className="path-node">{node}</span>
+                      {index < routeResult.path.length - 1 && <span className="path-arrow">→</span>}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="path-info">
+                <span className="info-label">Total Distance:</span>
+                <span className="info-value">{routeResult.distance.toFixed(2)}</span>
+              </div>
             </div>
-            <p style={{ margin: '5px 0', fontWeight: 'bold' }}>
-              Total Distance: {routeResult.distance.toFixed(2)}
-            </p>
           </div>
         )}
       </div>
 
-      <div style={styles.panel}>
-        <h3 style={{ margin: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <RefreshCw size={20} />
+      <div className="admin-panel">
+        <h2>
+          <RefreshIcon />
           Quick Actions
-        </h3>
+        </h2>
         
-        <button
-          onClick={fetchAllData}
-          disabled={isLoading}
-          style={{
-            ...styles.button,
-            marginBottom: '10px',
-            ...(isLoading ? styles.buttonDisabled : {})
-          }}
-        >
-          <RefreshCw size={16} />
-          Refresh Data
-        </button>
+        <div className="admin-actions">
+          <button
+            onClick={fetchAllData}
+            disabled={isLoading}
+            className="admin-btn init-btn"
+          >
+            <RefreshIcon />
+            Refresh Data
+          </button>
 
-        <button
-          onClick={initSampleData}
-          disabled={isLoading}
-          style={{
-            ...styles.button,
-            ...styles.buttonSuccess,
-            marginBottom: '10px',
-            ...(isLoading ? styles.buttonDisabled : {})
-          }}
-        >
-          <Database size={16} />
-          Initialize Sample Data
-        </button>
+          <button
+            onClick={initSampleData}
+            disabled={isLoading}
+            className="admin-btn init-btn"
+          >
+            <DatabaseIcon />
+            Initialize Sample Data
+          </button>
 
-        <button
-          onClick={clearAllData}
-          disabled={isLoading}
-          style={{
-            ...styles.button,
-            ...styles.buttonDanger,
-            ...(isLoading ? styles.buttonDisabled : {})
-          }}
-        >
-          <Database size={16} />
-          Clear All Data
-        </button>
+          <button
+            onClick={clearAllData}
+            disabled={isLoading}
+            className="admin-btn clear-btn"
+          >
+            <DatabaseIcon />
+            Clear All Data
+          </button>
+        </div>
       </div>
     </div>
   );
 
   const renderDataTab = () => (
-    <div style={styles.content}>
-      <div style={styles.panel}>
-        <h3 style={{ margin: '0 0 15px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <MapPin size={20} />
+    <div className="data-sections">
+      <div className="nodes-section">
+        <h2>
+          <MapPinIcon />
           Nodes ({nodes.length})
-        </h3>
+        </h2>
         
         {nodes.length === 0 ? (
-          <p style={{ color: '#666', fontStyle: 'italic' }}>No nodes found. Initialize sample data to get started.</p>
+          <div className="empty-data">No nodes found. Initialize sample data to get started.</div>
         ) : (
-          <div style={styles.grid}>
+          <div className="nodes-list">
             {nodes.map(node => (
-              <div key={node.id} style={styles.card}>
-                <h4 style={{ margin: '0 0 5px 0', color: '#333' }}>{node.id}</h4>
-                <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>{node.name}</p>
+              <div key={node.id} className="node-card">
+                <h4>{node.id}</h4>
+                <p className="node-id">{node.name}</p>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      <div style={styles.panel}>
-        <h3 style={{ margin: '0 0 15px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Route size={20} />
+      <div className="edges-section">
+        <h2>
+          <RouteIcon />
           Edges ({edges.length})
-        </h3>
+        </h2>
         
         {edges.length === 0 ? (
-          <p style={{ color: '#666', fontStyle: 'italic' }}>No edges found. Initialize sample data to get started.</p>
+          <div className="empty-data">No edges found. Initialize sample data to get started.</div>
         ) : (
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <div className="edges-list">
             {edges.map((edge, index) => (
-              <div key={index} style={styles.edgeCard}>
-                <div>
-                  <strong>{edge.from} → {edge.to}</strong>
-                  <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
-                    Weight: {edge.weight}
-                  </div>
+              <div key={index} className="edge-card">
+                <div className="edge-connection">
+                  <span className="node-name">{edge.from}</span>
+                  <span className="connection-arrow">→</span>
+                  <span className="node-name">{edge.to}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  {edge.blocked ? (
-                    <ZapOff size={16} style={{ color: '#dc3545' }} />
-                  ) : (
-                    <Zap size={16} style={{ color: '#28a745' }} />
-                  )}
-                  <span style={{ 
-                    fontSize: '12px', 
-                    color: edge.blocked ? '#dc3545' : '#28a745',
-                    fontWeight: 'bold'
-                  }}>
-                    {edge.blocked ? 'Blocked' : 'Open'}
+                <div className="edge-info">
+                  <span className="edge-distance">Weight: {edge.weight}</span>
+                  <span className={`edge-status ${edge.blocked ? 'blocked' : 'open'}`}>
+                    {edge.blocked ? (
+                      <>
+                        <XIcon /> Blocked
+                      </>
+                    ) : (
+                      <>
+                        <CheckIcon /> Open
+                      </>
+                    )}
                   </span>
                 </div>
               </div>
@@ -469,49 +377,45 @@ const RouteManagementUI = () => {
   );
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={{ margin: '0 0 10px 0' }}>🗺️ Route Management Dashboard</h1>
-        <p style={{ margin: 0, opacity: 0.9 }}>Manage nodes, edges, and find optimal paths</p>
+    <div className="route-container">
+      <header className="app-header">
+        <h1>Route Management Dashboard</h1>
+        <p>Manage nodes, edges, and find optimal paths</p>
       </header>
 
-      {message && (
-        <div style={styles.message}>
-          <span>{message}</span>
-          <button 
-            onClick={() => setMessage('')}
-            style={{ border: 'none', background: 'none', fontSize: '20px', cursor: 'pointer' }}
+      <div className="route-dashboard">
+        {message && (
+          <div className="message-banner">
+            <span>{message}</span>
+            <button 
+              onClick={() => setMessage('')}
+              className="close-btn"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        <div className="tabs">
+          <button
+            className={`tab ${activeTab === 'pathfinding' ? 'active-tab' : ''}`}
+            onClick={() => setActiveTab('pathfinding')}
           >
-            ×
+            <NavigationIcon />
+            Pathfinding
+          </button>
+          <button
+            className={`tab ${activeTab === 'data' ? 'active-tab' : ''}`}
+            onClick={() => setActiveTab('data')}
+          >
+            <SettingsIcon />
+            Data View
           </button>
         </div>
-      )}
 
-      <div style={styles.tabs}>
-        <button
-          style={{
-            ...styles.tab,
-            ...(activeTab === 'pathfinding' ? styles.activeTab : {})
-          }}
-          onClick={() => setActiveTab('pathfinding')}
-        >
-          <Navigation size={18} />
-          Pathfinding
-        </button>
-        <button
-          style={{
-            ...styles.tab,
-            ...(activeTab === 'data' ? styles.activeTab : {})
-          }}
-          onClick={() => setActiveTab('data')}
-        >
-          <Settings size={18} />
-          Data View
-        </button>
+        {activeTab === 'pathfinding' && renderPathfindingTab()}
+        {activeTab === 'data' && renderDataTab()}
       </div>
-
-      {activeTab === 'pathfinding' && renderPathfindingTab()}
-      {activeTab === 'data' && renderDataTab()}
     </div>
   );
 };
