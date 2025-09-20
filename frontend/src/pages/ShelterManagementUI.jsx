@@ -1,4 +1,36 @@
 import React, { useState, useEffect } from 'react';
+import '../styles/ShelterManagementUI.css';
+
+// SVG Icons
+const RefreshIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+  </svg>
+);
+
+const CheckInIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
+    <polygon points="12 15 17 21 7 21 12 15"></polygon>
+  </svg>
+);
+
+const CheckOutIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M19 7V4a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"></path>
+    <path d="M5 7h14v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7z"></path>
+    <line x1="12" y1="12" x2="12" y2="16"></line>
+    <line x1="9" y1="13" x2="15" y2="13"></line>
+  </svg>
+);
+
+const CreateIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 5v14M5 12h14"></path>
+  </svg>
+);
 
 const ShelterManagementUI = () => {
   const [shelters, setShelters] = useState([]);
@@ -143,247 +175,225 @@ const ShelterManagementUI = () => {
     }));
   };
 
-  const styles = {
-    container: {
-      padding: '20px',
-      fontFamily: 'Arial, sans-serif',
-      maxWidth: '1200px',
-      margin: '0 auto'
-    },
-    header: {
-      backgroundColor: '#007bff',
-      color: 'white',
-      padding: '20px',
-      textAlign: 'center',
-      borderRadius: '8px',
-      marginBottom: '20px'
-    },
-    message: {
-      padding: '10px',
-      backgroundColor: '#e7f3ff',
-      border: '1px solid #b3d9ff',
-      borderRadius: '4px',
-      marginBottom: '20px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    },
-    dashboard: {
-      display: 'grid',
-      gridTemplateColumns: '2fr 1fr',
-      gap: '20px'
-    },
-    shelterGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-      gap: '15px',
-      marginTop: '10px'
-    },
-    shelterCard: {
-      border: '2px solid #ddd',
-      borderRadius: '8px',
-      padding: '15px',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease'
-    },
-    shelterCardSelected: {
-      border: '2px solid #007bff',
-      backgroundColor: '#e7f3ff'
-    },
-    operationsPanel: {
-      border: '1px solid #ddd',
-      borderRadius: '8px',
-      padding: '20px'
-    },
-    operationSection: {
-      marginBottom: '20px',
-      padding: '15px',
-      border: '1px solid #eee',
-      borderRadius: '6px'
-    },
-    input: {
-      width: '100%',
-      padding: '8px 12px',
-      border: '1px solid #ddd',
-      borderRadius: '4px',
-      marginBottom: '10px'
-    },
-    button: {
-      padding: '8px 16px',
-      backgroundColor: '#007bff',
-      color: 'white',
-      border: 'none',
-      borderRadius: '4px',
-      cursor: 'pointer',
-      width: '100%'
-    },
-    buttonDisabled: {
-      backgroundColor: '#ccc',
-      cursor: 'not-allowed'
-    },
-    checkinButton: {
-      backgroundColor: '#28a745'
-    },
-    checkoutButton: {
-      backgroundColor: '#fd7e14'
-    },
-    refreshButton: {
-      backgroundColor: '#6c757d',
-      marginBottom: '10px'
-    }
-  };
-
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
+    <div className="shelter-container">
+      <header className="app-header">
         <h1>Shelter Management Dashboard</h1>
       </header>
 
-      {message && (
-        <div style={styles.message}>
-          <span>{message}</span>
-          <button onClick={() => setMessage('')} style={{border: 'none', background: 'none', fontSize: '20px'}}>×</button>
-        </div>
-      )}
-
-      <div style={styles.dashboard}>
-        <div>
-          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-            <h2>Available Shelters</h2>
-            <button 
-              onClick={fetchShelters}
-              disabled={isLoading}
-              style={{...styles.button, ...styles.refreshButton, width: 'auto', padding: '6px 12px'}}
-            >
-              {isLoading ? 'Loading...' : 'Refresh'}
-            </button>
+      <div className="shelter-dashboard">
+        {message && (
+          <div className="message-banner">
+            <span>{message}</span>
+            <button onClick={() => setMessage('')} className="close-btn">×</button>
           </div>
-          
-          <div style={styles.shelterGrid}>
-            {shelters.map(shelter => (
-              <div
-                key={shelter.shelterId}
-                style={{
-                  ...styles.shelterCard,
-                  ...(selectedShelter?.shelterId === shelter.shelterId ? styles.shelterCardSelected : {})
-                }}
-                onClick={() => setSelectedShelter(shelter)}
+        )}
+
+        <div className="shelter-content">
+          <div className="shelter-selection">
+            <div className="section-header">
+              <h2>Available Shelters</h2>
+              <button 
+                onClick={fetchShelters}
+                disabled={isLoading}
+                className="refresh-btn"
               >
-                <h3 style={{margin: '0 0 10px 0', color: '#333'}}>{shelter.name}</h3>
-                <p style={{margin: '5px 0', fontSize: '14px', color: '#666'}}>
-                  ID: {shelter.shelterId}
-                </p>
-                <p style={{margin: '5px 0', fontSize: '14px'}}>
-                  Capacity: {shelter.capacity}
-                </p>
-                <p style={{margin: '5px 0', fontSize: '14px'}}>
-                  Population: {shelter.currentPopulation || shelter.queue?.size || 0}
-                </p>
-                <p style={{margin: '5px 0', fontSize: '14px'}}>
-                  Available: {shelter.remainingCapacity || (shelter.capacity - (shelter.queue?.size || 0))}
-                </p>
-                {shelter.queue?.queueList && shelter.queue.queueList.length > 0 && (
-                  <p style={{margin: '8px 0 0 0', fontSize: '12px', color: '#666', borderTop: '1px solid #eee', paddingTop: '5px'}}>
-                    Queue: {shelter.queue.queueList.slice(0, 3).join(', ')}
-                    {shelter.queue.queueList.length > 3 && '...'}
-                  </p>
-                )}
-              </div>
-            ))}
+                <RefreshIcon />
+                {isLoading ? 'Loading...' : 'Refresh'}
+              </button>
+            </div>
+            
+            <div className="shelter-cards">
+              {shelters.map(shelter => {
+                const population = shelter.currentPopulation || shelter.queue?.size || 0;
+                const capacity = shelter.capacity;
+                const remaining = shelter.remainingCapacity || (capacity - population);
+                const capacityPercentage = capacity > 0 ? (population / capacity) * 100 : 0;
+                
+                return (
+                  <div
+                    key={shelter.shelterId}
+                    className={`shelter-card ${selectedShelter?.shelterId === shelter.shelterId ? 'selected' : ''}`}
+                    onClick={() => setSelectedShelter(shelter)}
+                  >
+                    <h3>{shelter.name}</h3>
+                    <p className="shelter-id">ID: {shelter.shelterId}</p>
+                    
+                    <div className="shelter-stats">
+                      <div className="shelter-stat">
+                        <span className="stat-label">Capacity</span>
+                        <span className="stat-value">{capacity}</span>
+                      </div>
+                      <div className="shelter-stat">
+                        <span className="stat-label">Population</span>
+                        <span className="stat-value">{population}</span>
+                      </div>
+                      <div className="shelter-stat">
+                        <span className="stat-label">Available</span>
+                        <span className="stat-value highlight">{remaining}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="capacity-bar">
+                      <div 
+                        className="capacity-fill" 
+                        style={{ width: `${capacityPercentage}%` }}
+                      ></div>
+                    </div>
+                    
+                    {shelter.queue?.queueList && shelter.queue.queueList.length > 0 && (
+                      <div className="queue-info">
+                        <span className="queue-label">Queue: {shelter.queue.queueList.length}</span>
+                        <div className="queue-preview">
+                          {shelter.queue.queueList.slice(0, 3).join(', ')}
+                          {shelter.queue.queueList.length > 3 && '...'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        <div>
-          {selectedShelter && (
-            <div style={styles.operationsPanel}>
-              <h3 style={{marginTop: '0'}}>Operations - {selectedShelter.name}</h3>
-              
-              <div style={styles.operationSection}>
-                <h4>Check-in User</h4>
-                <input
-                  type="text"
-                  value={rfidTag}
-                  onChange={e => setRfidTag(e.target.value)}
-                  placeholder="Enter RFID Tag"
-                  style={styles.input}
-                  onKeyPress={e => e.key === 'Enter' && handleCheckIn()}
-                />
-                <button 
-                  onClick={handleCheckIn} 
-                  disabled={isLoading || !rfidTag.trim()}
-                  style={{...styles.button, ...styles.checkinButton, ...(isLoading || !rfidTag.trim() ? styles.buttonDisabled : {})}}
-                >
-                  {isLoading ? 'Processing...' : 'Check-in'}
-                </button>
-              </div>
-
-              <div style={styles.operationSection}>
-                <h4>Check-out User</h4>
-                <button 
-                  onClick={handleCheckOut} 
-                  disabled={isLoading}
-                  style={{...styles.button, ...styles.checkoutButton, ...(isLoading ? styles.buttonDisabled : {})}}
-                >
-                  {isLoading ? 'Processing...' : 'Check-out Next'}
-                </button>
-              </div>
-
-              <div style={{...styles.operationSection, backgroundColor: '#f8f9fa'}}>
-                <h4>Shelter Details</h4>
-                <p><strong>ID:</strong> {selectedShelter.shelterId}</p>
-                <p><strong>Name:</strong> {selectedShelter.name}</p>
-                <p><strong>Capacity:</strong> {selectedShelter.capacity}</p>
-                <p><strong>Current Population:</strong> {selectedShelter.currentPopulation || selectedShelter.queue?.size || 0}</p>
-                <p><strong>Remaining Space:</strong> {selectedShelter.remainingCapacity || (selectedShelter.capacity - (selectedShelter.queue?.size || 0))}</p>
+          <div className="shelter-operations">
+            {selectedShelter && (
+              <div className="shelter-info">
+                <h2>Operations - {selectedShelter.name}</h2>
+                
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">ID</span>
+                    <span className="info-value">{selectedShelter.shelterId}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Name</span>
+                    <span className="info-value">{selectedShelter.name}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Capacity</span>
+                    <span className="info-value">{selectedShelter.capacity}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Population</span>
+                    <span className="info-value">
+                      {selectedShelter.currentPopulation || selectedShelter.queue?.size || 0}
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Available</span>
+                    <span className="info-value highlight">
+                      {selectedShelter.remainingCapacity || 
+                       (selectedShelter.capacity - (selectedShelter.queue?.size || 0))}
+                    </span>
+                  </div>
+                </div>
                 
                 {selectedShelter.queue?.queueList && selectedShelter.queue.queueList.length > 0 && (
-                  <div style={{marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #ddd'}}>
-                    <strong>Current Queue:</strong>
-                    <div style={{maxHeight: '100px', overflowY: 'auto', marginTop: '5px'}}>
+                  <div className="queue-details">
+                    <h4>Current Queue</h4>
+                    <div className="queue-list">
                       {selectedShelter.queue.queueList.map((rfid, index) => (
-                        <div key={index} style={{fontSize: '12px', padding: '2px 0'}}>
-                          {index + 1}. {rfid}
+                        <div key={index} className="queue-item">
+                          <span className="queue-position">{index + 1}.</span>
+                          <span className="queue-rfid">{rfid}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
-            </div>
-          )}
+            )}
 
-          <div style={{...styles.operationsPanel, marginTop: '20px'}}>
-            <h3 style={{marginTop: '0'}}>Create New Shelter</h3>
-            <input 
-              name="id" 
-              placeholder="Shelter ID" 
-              value={newShelter.id} 
-              onChange={handleInputChange}
-              style={styles.input}
-            />
-            <input 
-              name="name" 
-              placeholder="Shelter Name" 
-              value={newShelter.name} 
-              onChange={handleInputChange}
-              style={styles.input}
-            />
-            <input
-              name="capacity"
-              type="number"
-              min="1"
-              placeholder="Capacity"
-              value={newShelter.capacity}
-              onChange={handleInputChange}
-              style={styles.input}
-            />
-            <button 
-              onClick={handleCreateShelter} 
-              disabled={isLoading}
-              style={{...styles.button, ...(isLoading ? styles.buttonDisabled : {})}}
-            >
-              {isLoading ? 'Creating...' : 'Create Shelter'}
-            </button>
+            <div className="operation-section">
+              <h3>Shelter Operations</h3>
+              
+              <div className="operation-cards">
+                <div className="operation-card">
+                  <h4>Check-in User</h4>
+                  <div className="input-group">
+                    <label>RFID Tag</label>
+                    <input
+                      type="text"
+                      value={rfidTag}
+                      onChange={e => setRfidTag(e.target.value)}
+                      placeholder="Enter RFID Tag"
+                      onKeyPress={e => e.key === 'Enter' && handleCheckIn()}
+                    />
+                  </div>
+                  <button 
+                    onClick={handleCheckIn} 
+                    disabled={isLoading || !rfidTag.trim()}
+                    className="operation-btn checkin-btn"
+                  >
+                    <CheckInIcon />
+                    {isLoading ? 'Processing...' : 'Check-in'}
+                  </button>
+                </div>
+
+                <div className="operation-card">
+                  <h4>Check-out User</h4>
+                  <p>Check out the next person in queue</p>
+                  <button 
+                    onClick={handleCheckOut} 
+                    disabled={isLoading}
+                    className="operation-btn checkout-btn"
+                  >
+                    <CheckOutIcon />
+                    {isLoading ? 'Processing...' : 'Check-out Next'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="create-shelter-section">
+              <h2>Create New Shelter</h2>
+              
+              <div className="shelter-form">
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Shelter ID</label>
+                    <input 
+                      name="id" 
+                      placeholder="Unique identifier" 
+                      value={newShelter.id} 
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Shelter Name</label>
+                    <input 
+                      name="name" 
+                      placeholder="Display name" 
+                      value={newShelter.name} 
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Capacity</label>
+                    <input
+                      name="capacity"
+                      type="number"
+                      min="1"
+                      placeholder="Maximum capacity"
+                      value={newShelter.capacity}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={handleCreateShelter} 
+                  disabled={isLoading}
+                  className="create-btn"
+                >
+                  <CreateIcon />
+                  {isLoading ? 'Creating...' : 'Create Shelter'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
