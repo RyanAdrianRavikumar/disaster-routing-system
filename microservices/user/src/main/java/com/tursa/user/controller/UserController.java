@@ -43,6 +43,8 @@ public class UserController {
         }
     }
 
+
+
     @GetMapping(path = "/users/rfid/{rfid}")
     public ResponseEntity<User> getUserByRfid(@PathVariable String rfid) {
         try {
