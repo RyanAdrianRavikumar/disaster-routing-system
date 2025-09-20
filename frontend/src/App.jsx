@@ -4,7 +4,8 @@ import './App.css';
 import RescueQueueUI from './pages/RescueQueueUI';
 import ShelterManagementUI from './pages/ShelterManagementUI';
 import RouteManagementUI from './pages/RouteManagementUI';
-import SensorControllerPage from './pages/SensorSimlution';
+import UserRegistration from './pages/UserRegistration';
+import SensorSimlution from './pages/SensorSimlution';
 
 function App() {
   return (
@@ -14,7 +15,8 @@ function App() {
           <Route path="/rescuequeue" element={<RescueQueueUI />} />
           <Route path="/sheltermanagement" element={<ShelterManagementUI />} />
           <Route path="/routemanagement" element={<RouteManagementUI />} />
-          <Route path="/sensorsimlution" element={<SensorControllerPage />} />
+          <Route path="/userregistration" element={<UserRegistration />} />
+          <Route path="/sensorsimulation" element={<SensorSimlution />} />
           {/* Add other routes as needed */}
         </Routes>
       </div>
