@@ -444,7 +444,7 @@ const UserRegistration = ({ onRegistrationSuccess }) => {
             </form>
 
             <div className="login-redirect">
-              <p>Already have an account? <a href="#login">Sign in here</a></p>
+              <p>Already have an account? <a href="/login">Sign in here</a></p>
             </div>
           </div>
 

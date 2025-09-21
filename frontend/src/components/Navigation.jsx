@@ -1,10 +1,15 @@
-// components/Navigation.js
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Navigation.css';
 
-const Navigation = () => {
+const Navigation = ({ onLogout, userData }) => {
   const location = useLocation();
+
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    }
+  };
 
   return (
     <nav className="main-navigation">
@@ -12,6 +17,7 @@ const Navigation = () => {
         <div className="nav-brand">
           <h2>Rescue Management System</h2>
         </div>
+        
         <ul className="nav-menu">
           <li className="nav-item">
             <Link 
@@ -46,6 +52,15 @@ const Navigation = () => {
             </Link>
           </li>
         </ul>
+        
+        <div className="nav-user">
+          {userData && (
+            <span className="user-welcome">Welcome, {userData.name}</span>
+          )}
+          <button onClick={handleLogout} className="logout-btn">
+            Logout
+          </button>
+        </div>
       </div>
     </nav>
   );
