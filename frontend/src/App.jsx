@@ -4,10 +4,11 @@ import './App.css';
 import RescueQueueUI from './pages/RescueQueueUI';
 import ShelterManagementUI from './pages/ShelterManagementUI';
 import RouteManagementUI from './pages/RouteManagementUI';
+import ShelterRouteUI from './pages/ShelterRouteUI'; // FIXED: import missing
 import UserRegistration from './pages/UserRegistration';
 import SensorSimulation from './pages/SensorSimulation';
 import Navigation from './components/Navigation';
-import ShelterRouteUI from './pages/ShelterRouteUI';
+import NotificationSimulationUI from './pages/NotificationSimulationUI'; 
 
 function App() {
   const [isRegistered, setIsRegistered] = useState(false);
@@ -22,18 +23,22 @@ function App() {
       <div className="App">
         {/* Show navigation only when user is registered */}
         {isRegistered && <Navigation />}
-        
+
         <Routes>
-          {/* Root path redirects to registration or route management based on registration status */}
+          {/* Root path redirects to registration or route management */}
           <Route 
             path="/" 
             element={
-              isRegistered ? 
-              <Navigate to="/routemanagement" replace /> : 
-              <UserRegistration onRegistrationSuccess={handleRegistrationSuccess} />
+              isRegistered ? (
+                <Navigate to="/routemanagement" replace />
+              ) : (
+                <UserRegistration onRegistrationSuccess={handleRegistrationSuccess} />
+              )
             } 
           />
-          
+
+          <Route path="/sensorsimulation" element={<SensorSimulation />} />
+          <Route path="/notificationsimulation" element={<NotificationSimulationUI />} />
           <Route path="/rescuequeue" element={<RescueQueueUI />} />
           <Route path="/sheltermanagement" element={<ShelterManagementUI />} />
           <Route path="/routemanagement" element={<RouteManagementUI />} />
@@ -41,14 +46,16 @@ function App() {
           <Route 
             path="/userregistration" 
             element={
-              isRegistered ? 
-              <Navigate to="/routemanagement" replace /> : 
-              <UserRegistration onRegistrationSuccess={handleRegistrationSuccess} />
+              isRegistered ? (
+                <Navigate to="/routemanagement" replace />
+              ) : (
+                <UserRegistration onRegistrationSuccess={handleRegistrationSuccess} />
+              )
             } 
           />
-          <Route path="/sensorsimulation" element={<SensorSimulation />} />
           
-          {/* Redirect any unknown routes to the root */}
+          
+          {/* Catch-all: redirect unknown routes to root */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
