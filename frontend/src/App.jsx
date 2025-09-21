@@ -9,6 +9,7 @@ import UserRegistration from './pages/UserRegistration';
 import SensorSimulation from './pages/SensorSimulation';
 import Navigation from './components/Navigation';
 import NotificationSimulationUI from './pages/NotificationSimulationUI'; 
+import ShelterUI from './pages/ShelterUI';
 
 function App() {
   const [isRegistered, setIsRegistered] = useState(false);
@@ -43,6 +44,7 @@ function App() {
           <Route path="/sheltermanagement" element={<ShelterManagementUI />} />
           <Route path="/routemanagement" element={<RouteManagementUI />} />
           <Route path="/shelterroute" element={<ShelterRouteUI />} />
+          <Route path="/shelter" element={<ShelterUI />} />
           <Route 
             path="/userregistration" 
             element={

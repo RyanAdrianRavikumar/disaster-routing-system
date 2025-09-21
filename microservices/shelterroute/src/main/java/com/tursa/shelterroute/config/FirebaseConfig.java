@@ -17,7 +17,6 @@ public class FirebaseConfig {
     @PostConstruct
     public void initFirebase() {
         try {
-            // Load the service account JSON from the classpath
             ClassPathResource resource = new ClassPathResource("disasterhub-fbe9c-firebase-adminsdk-fbsvc-ad7e354428.json");
             GoogleCredentials credentials = GoogleCredentials.fromStream(resource.getInputStream());
 

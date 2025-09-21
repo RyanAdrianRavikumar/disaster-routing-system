@@ -10,27 +10,26 @@ import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.stream.Collectors;
 
 @Service
 public class ShelterRouteService {
     private final FirebaseDatabase database;
-    private final ConcurrentHashMap<String, Node> nodes = new ConcurrentHashMap<>(); // Added in-memory node storage
-    private final ConcurrentHashMap<String, Edge> edges = new ConcurrentHashMap<>(); // Added in-memory edge storage
-    private final ConcurrentHashMap<String, Shelter> shelters = new ConcurrentHashMap<>(); // Added in-memory shelter storage
+    private final ConcurrentHashMap<String, Node> nodes = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Edge> edges = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Shelter> shelters = new ConcurrentHashMap<>();
 
-    public ShelterRouteService(FirebaseDatabase database) { // Added constructor with Firebase dependency
+    public ShelterRouteService(FirebaseDatabase database) {
         this.database = database;
     }
 
     @PostConstruct
-    public void init() { // Added initialization method
-        loadNodes(); // Load nodes from Firebase
-        loadEdges(); // Load edges from Firebase
-        loadShelters(); // Load shelters from Firebase
+    public void init() {
+        loadNodes();
+        loadEdges();
+        loadShelters();
     }
 
-    private void loadNodes() { // Added method to load nodes from Firebase
+    private void loadNodes() {
         DatabaseReference ref = database.getReference("nodes");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -51,7 +50,7 @@ public class ShelterRouteService {
         });
     }
 
-    private void loadEdges() { // Added method to load edges from Firebase
+    private void loadEdges() {
         DatabaseReference ref = database.getReference("edges");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -72,7 +71,7 @@ public class ShelterRouteService {
         });
     }
 
-    private void loadShelters() { // Added method to load shelters from Firebase
+    private void loadShelters() {
         DatabaseReference ref = database.getReference("shelters");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -93,29 +92,29 @@ public class ShelterRouteService {
         });
     }
 
-    public void addNode(Node node) { // Added method to add a node
+    public void addNode(Node node) {
         nodes.put(node.getId(), node);
         database.getReference("nodes").child(node.getId()).setValueAsync(node);
     }
 
-    public void addEdge(Edge edge) { // Added method to add an edge
+    public void addEdge(Edge edge) {
         String edgeId = edge.getFrom() + "-" + edge.getTo();
         edges.put(edgeId, edge);
         database.getReference("edges").child(edgeId).setValueAsync(edge);
     }
 
-    public String createShelter(String shelterId, String name, int capacity, Double latitude, Double longitude) { // Added method to create a shelter
+    public String createShelter(String shelterId, String name, int capacity, double latitude, double longitude) {
         if (shelters.containsKey(shelterId)) {
             return "Shelter already exists";
         }
         Shelter shelter = new Shelter(shelterId, name, capacity, latitude, longitude);
         shelters.put(shelterId, shelter);
         database.getReference("shelters").child(shelterId).setValueAsync(shelter);
-        addNode(new Node(shelterId, name, latitude, longitude)); // Add corresponding node
+        addNode(new Node(shelterId, name, latitude, longitude)); // Sync as node
         return "Shelter " + shelterId + " created with capacity " + capacity;
     }
 
-    public String checkInUser(String shelterId, String rfidTag) { // Added method to check in a user
+    public String checkInUser(String shelterId, String rfidTag) {
         Shelter shelter = shelters.get(shelterId);
         if (shelter == null) {
             return "Shelter not found";
@@ -131,7 +130,7 @@ public class ShelterRouteService {
         return "User " + rfidTag + " checked into shelter " + shelterId;
     }
 
-    public String checkOutUser(String shelterId) { // Added method to check out a user
+    public String checkOutUser(String shelterId) {
         Shelter shelter = shelters.get(shelterId);
         if (shelter == null) {
             return "Shelter not found";
@@ -144,29 +143,33 @@ public class ShelterRouteService {
         return "User " + removed + " checked out from shelter " + shelterId;
     }
 
-    public List<Node> getNodes() { // Added method to get all nodes
+    public List<Node> getNodes() {
         return new ArrayList<>(nodes.values());
     }
 
-    public List<Edge> getEdges() { // Added method to get all edges
+    public List<Edge> getEdges() {
         return new ArrayList<>(edges.values());
     }
 
-    public List<Shelter> getShelters() { // Added method to get all shelters
+    public List<Shelter> getShelters() {
         return new ArrayList<>(shelters.values());
     }
 
-    public List<Shelter> getAvailableShelters() { // Added method to get shelters with capacity
-        return shelters.values().stream()
-                .filter(shelter -> shelter.getRemainingCapacity() > 0)
-                .collect(Collectors.toList());
+    public List<Shelter> getAvailableShelters() {
+        List<Shelter> available = new ArrayList<>();
+        for (Shelter shelter : shelters.values()) {
+            if (shelter.getRemainingCapacity() > 0) {
+                available.add(shelter);
+            }
+        }
+        return available;
     }
 
-    public String findNearestNode(double lat, double lng) { // Added method to find nearest node
+    public String findNearestNode(double lat, double lng) {
         String nearest = null;
         double minDist = Double.MAX_VALUE;
         for (Node node : nodes.values()) {
-            if (node.getLatitude() != null && node.getLongitude() != null) {
+            if (node.getLatitude() != 0 && node.getLongitude() != 0) { // Check for valid lat/lng
                 double dist = haversineDistance(lat, lng, node.getLatitude(), node.getLongitude());
                 if (dist < minDist) {
                     minDist = dist;
@@ -177,11 +180,11 @@ public class ShelterRouteService {
         return nearest;
     }
 
-    public String findNearestAvailableShelter(double userLat, double userLng) { // Added method to find nearest shelter with capacity
+    public String findNearestAvailableShelter(double userLat, double userLng) {
         String nearest = null;
         double minDist = Double.MAX_VALUE;
         for (Shelter shelter : shelters.values()) {
-            if (shelter.getLatitude() != null && shelter.getLongitude() != null && shelter.getRemainingCapacity() > 0) {
+            if (shelter.getLatitude() != 0 && shelter.getLongitude() != 0 && shelter.getRemainingCapacity() > 0) {
                 double dist = haversineDistance(userLat, userLng, shelter.getLatitude(), shelter.getLongitude());
                 if (dist < minDist) {
                     minDist = dist;
@@ -192,7 +195,7 @@ public class ShelterRouteService {
         return nearest;
     }
 
-    private double haversineDistance(double lat1, double lng1, double lat2, double lng2) { // Added Haversine formula for distance
+    private double haversineDistance(double lat1, double lng1, double lat2, double lng2) {
         double R = 6371; // Earth radius in km
         double dLat = Math.toRadians(lat2 - lat1);
         double dLng = Math.toRadians(lng2 - lng1);
@@ -203,7 +206,7 @@ public class ShelterRouteService {
         return R * c;
     }
 
-    public static class RouteResponse { // Added class for shortest path response
+    public static class RouteResponse {
         private List<String> path;
         private double distance;
 
@@ -218,7 +221,7 @@ public class ShelterRouteService {
         public void setDistance(double distance) { this.distance = distance; }
     }
 
-    public RouteResponse shortestPathWithDistance(String start, String end) { // Added Dijkstra’s algorithm for shortest path
+    public RouteResponse shortestPathWithDistance(String start, String end) {
         Set<String> nodeIds = nodes.keySet();
         if (!nodeIds.contains(start)) {
             throw new IllegalArgumentException("Start node '" + start + "' does not exist");
@@ -280,7 +283,7 @@ public class ShelterRouteService {
         return new RouteResponse(path, dist.get(end));
     }
 
-    public void clearData() { // Added method to clear all data
+    public void clearData() {
         nodes.clear();
         edges.clear();
         shelters.clear();
@@ -289,7 +292,7 @@ public class ShelterRouteService {
         database.getReference("shelters").removeValueAsync();
     }
 
-    public void initSampleData() { // Added method to initialize sample data
+    public void initSampleData() {
         clearData();
         // Add nodes
         addNode(new Node("A", "Point A", 40.7128, -74.0060));
