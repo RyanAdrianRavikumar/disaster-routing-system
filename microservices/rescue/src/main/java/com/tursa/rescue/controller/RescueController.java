@@ -43,7 +43,7 @@ public class RescueController {
         return ResponseEntity.ok(rescueService.queueSize());
     }
 
-    @GetMapping(path = "rescue/isEmpty")
+    @GetMapping(path = "/rescue/isEmpty")
     public ResponseEntity<Boolean> isQueueEmpty() {
         return ResponseEntity.ok(rescueService.isQueueEmpty());
     }
@@ -51,5 +51,15 @@ public class RescueController {
     @GetMapping(path = "/rescue/isFull")
     public ResponseEntity<Boolean> isQueueFull() {
         return ResponseEntity.ok(rescueService.isQueueFull());
+    }
+
+    @GetMapping(path = "/rescue/users")
+    public ResponseEntity<List<UserDTO>> getQueueUsers() {
+        try {
+            List<UserDTO> users = rescueService.getAllQueuedUsers();
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

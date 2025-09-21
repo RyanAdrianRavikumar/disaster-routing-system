@@ -66,4 +66,8 @@ public class RescueService {
     public boolean isQueueFull() {
         return rescueQueue.isFull();
     }
+
+    public List<UserDTO> getAllQueuedUsers() {
+        return rescueQueue.getUsers();
+    }
 }
