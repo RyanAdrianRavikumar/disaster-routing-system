@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/UserRegistration.css';
 
 // SVG Icons
@@ -39,7 +40,7 @@ const IDIcon = () => (
   </svg>
 );
 
-const UserRegistration = () => {
+const UserRegistration = ({ onRegistrationSuccess }) => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -51,6 +52,7 @@ const UserRegistration = () => {
   });
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -93,6 +95,17 @@ const UserRegistration = () => {
         password: '',
         confirmPassword: ''
       });
+      
+      // Call the success callback to update registration status
+      if (onRegistrationSuccess) {
+        onRegistrationSuccess();
+      }
+      
+      // Navigate to route management after a brief delay
+      setTimeout(() => {
+        navigate('/routemanagement');
+      }, 2000);
+      
     } catch (error) {
       setMessage('Registration failed. Please try again.');
     } finally {
