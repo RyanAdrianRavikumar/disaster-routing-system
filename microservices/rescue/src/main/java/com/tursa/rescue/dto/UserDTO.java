@@ -6,7 +6,7 @@ public class UserDTO {
     private Integer childrenCount;
     private Integer elderlyCount;
 
-    // Getters/Setters
+    // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -19,6 +19,7 @@ public class UserDTO {
     public Integer getElderlyCount() { return elderlyCount; }
     public void setElderlyCount(Integer elderlyCount) { this.elderlyCount = elderlyCount; }
 
+    // Priority calculation
     public int getPriority() {
         return (childrenCount != null ? childrenCount : 0) +
                 (elderlyCount != null ? elderlyCount : 0);

@@ -15,8 +15,8 @@ public class RescueController {
     private RescueService rescueService;
 
     @PostMapping(path = "/rescue/enqueue")
-    public ResponseEntity<String> enqueueUsers(@RequestBody List<UserDTO> users) {
-        String msg = rescueService.enqueueUsers(users);
+    public ResponseEntity<String> enqueueUsers() {
+        String msg = rescueService.enqueueUsersFromUserService();
         return ResponseEntity.ok(msg);
     }
 
