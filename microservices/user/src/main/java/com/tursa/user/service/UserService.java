@@ -1,149 +1,235 @@
 package com.tursa.user.service;
 
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.*;
+import com.google.firebase.cloud.FirestoreClient;
 import com.tursa.user.entity.User;
-import com.tursa.user.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private FirebaseRealtimeService firebaseService;
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+    private static final String COLLECTION_NAME = "users";
 
-    public List<User> getAllUsers() {
-        try {
-            // Use the synchronous REST-based method in FirebaseRealtimeService
-            return firebaseService.getAllUsers();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to fetch users from Firebase", e);
+    private Firestore getFirestore() {
+        return FirestoreClient.getFirestore();
+    }
+
+    public List<User> getAllUsers() throws InterruptedException, ExecutionException {
+        Firestore db = getFirestore();
+        ApiFuture<QuerySnapshot> future = db.collection(COLLECTION_NAME).get();
+        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+
+        List<User> users = new ArrayList<>();
+        for (QueryDocumentSnapshot document : documents) {
+            User user = document.toObject(User.class);
+            user.setId(document.getId());
+            users.add(user);
         }
+        return users;
     }
 
-    public User createUser(User user) {
-        try {
-            // Validation
-            if (user.getRfid() == null || user.getName() == null) {
-                throw new IllegalArgumentException("RFID and name are required");
-            }
+    public User createUser(User user) throws InterruptedException, ExecutionException {
+        Firestore db = getFirestore();
 
-            // Check for duplicate RFID in MySQL
-            if (userRepository.findByRfid(user.getRfid()).isPresent()) {
-                throw new IllegalArgumentException("User with RFID " + user.getRfid() + " already exists");
-            }
+        // Check if RFID already exists
+        Query query = db.collection(COLLECTION_NAME).whereEqualTo("rfid", user.getRfid());
+        ApiFuture<QuerySnapshot> querySnapshot = query.get();
 
-            // Save to MySQL
-            User savedUser = userRepository.save(user);
-            logger.info("Created new user in MySQL: {}", savedUser.getRfid());
-
-            // Save to Firebase
-            try {
-                firebaseService.saveUser(savedUser);
-                logger.info("Created new user in Firebase: {}", savedUser.getRfid());
-            } catch (Exception e) {
-                logger.error("Failed to save user {} to Firebase: {}", savedUser.getRfid(), e.getMessage());
-            }
-
-            return savedUser;
-
-        } catch (Exception e) {
-            logger.error("Error creating user: {}", e.getMessage());
-            throw new RuntimeException("Failed to create user", e);
+        if (!querySnapshot.get().getDocuments().isEmpty()) {
+            throw new IllegalArgumentException("User with RFID " + user.getRfid() + " already exists");
         }
+
+        DocumentReference docRef = db.collection(COLLECTION_NAME).document();
+        user.setId(docRef.getId());
+        ApiFuture<WriteResult> result = docRef.set(user);
+        result.get(); // Wait for the operation to complete
+
+        logger.info("Created new user in Firebase: {}", user.getRfid());
+        return user;
     }
 
-    public User findByRfid(String rfid) {
-        return userRepository.findByRfid(rfid).orElseThrow(() -> new EntityNotFoundException("User not found with RFID: " + rfid));
-    }
+    public User findByRfid(String rfid) throws InterruptedException, ExecutionException {
+        Firestore db = getFirestore();
+        Query query = db.collection(COLLECTION_NAME).whereEqualTo("rfid", rfid);
+        ApiFuture<QuerySnapshot> querySnapshot = query.get();
 
-    public User updateLocation(String rfid, Double latitude, Double longitude) {
-        try {
-            User user = findByRfid(rfid);
-            user.setCurrentLatitude(latitude);
-            user.setCurrentLongitude(longitude);
-
-            User updatedUser = userRepository.save(user);
-
-            // Update Firebase real-time location
-            firebaseService.updateUserLocation(rfid, latitude, longitude);
-
-            logger.info("Updated location for user: {} to ({}, {})", rfid, latitude, longitude);
-            return updatedUser;
-
-        } catch (Exception e) {
-            logger.error("Error updating location for user {}: {}", rfid, e.getMessage());
-            throw new RuntimeException("Failed to update user location", e);
+        List<QueryDocumentSnapshot> documents = querySnapshot.get().getDocuments();
+        if (documents.isEmpty()) {
+            return null;
         }
+
+        User user = documents.get(0).toObject(User.class);
+        user.setId(documents.get(0).getId());
+        return user;
     }
 
-    public List<User> getUsersNeedingRescue() {
-        return userRepository.findByStatusOrderByPriorityDesc(User.UserStatus.NEEDS_RESCUE);
+    public User updateLocation(String rfid, Double latitude, Double longitude) throws InterruptedException, ExecutionException {
+        Firestore db = getFirestore();
+        Query query = db.collection(COLLECTION_NAME).whereEqualTo("rfid", rfid);
+        ApiFuture<QuerySnapshot> querySnapshot = query.get();
+
+        List<QueryDocumentSnapshot> documents = querySnapshot.get().getDocuments();
+        if (documents.isEmpty()) {
+            return null;
+        }
+
+        DocumentReference docRef = documents.get(0).getReference();
+        ApiFuture<WriteResult> result = docRef.update(
+                "currentLatitude", latitude,
+                "currentLongitude", longitude
+        );
+        result.get();
+
+        User user = documents.get(0).toObject(User.class);
+        user.setId(documents.get(0).getId());
+        user.setCurrentLatitude(latitude);
+        user.setCurrentLongitude(longitude);
+
+        logger.info("Updated location for user: {} to ({}, {})", rfid, latitude, longitude);
+        return user;
     }
 
-    public User updateUserStatus(String rfid, User.UserStatus status) {
-        try {
-            User user = findByRfid(rfid);
-            user.setStatus(status);
+    public List<User> getUsersNeedingRescue() throws InterruptedException, ExecutionException {
+        Firestore db = getFirestore();
+        Query query = db.collection(COLLECTION_NAME)
+                .whereEqualTo("status", User.UserStatus.NEEDS_RESCUE.toString())
+                .orderBy("rescuePriority", Query.Direction.DESCENDING);
 
-            // Calculate rescue priority based on status and family
-            if (status == User.UserStatus.NEEDS_RESCUE) {
-                int priority = calculateRescuePriority(user);
-                user.setRescuePriority(priority);
+        ApiFuture<QuerySnapshot> future = query.get();
+        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+
+        List<User> users = new ArrayList<>();
+        for (QueryDocumentSnapshot document : documents) {
+            User user = document.toObject(User.class);
+            user.setId(document.getId());
+            users.add(user);
+        }
+        return users;
+    }
+
+    public User updateUserStatus(String rfid, User.UserStatus status) throws InterruptedException, ExecutionException {
+        Firestore db = getFirestore();
+        Query query = db.collection(COLLECTION_NAME).whereEqualTo("rfid", rfid);
+        ApiFuture<QuerySnapshot> querySnapshot = query.get();
+
+        List<QueryDocumentSnapshot> documents = querySnapshot.get().getDocuments();
+        if (documents.isEmpty()) {
+            return null;
+        }
+
+        DocumentReference docRef = documents.get(0).getReference();
+        ApiFuture<WriteResult> result = docRef.update("status", status.toString());
+        result.get();
+
+        // If status is NEEDS_RESCUE, calculate and update priority
+        if (status == User.UserStatus.NEEDS_RESCUE) {
+            User user = documents.get(0).toObject(User.class);
+            int priority = calculateRescuePriority(user);
+            docRef.update("rescuePriority", priority).get();
+        }
+
+        User user = documents.get(0).toObject(User.class);
+        user.setId(documents.get(0).getId());
+        user.setStatus(status);
+
+        logger.info("Updated status for user {} to {}", rfid, status);
+        return user;
+    }
+
+    public List<User> getUsersInArea(Double latitude, Double longitude, Double radiusKm) throws InterruptedException, ExecutionException {
+        Firestore db = getFirestore();
+
+        // Calculate approximate bounding box
+        double latRange = radiusKm / 111.0;
+        double lonRange = radiusKm / (111.0 * Math.cos(Math.toRadians(latitude)));
+
+        double minLat = latitude - latRange;
+        double maxLat = latitude + latRange;
+        double minLon = longitude - lonRange;
+        double maxLon = longitude + lonRange;
+
+        Query query = db.collection(COLLECTION_NAME)
+                .whereGreaterThanOrEqualTo("currentLatitude", minLat)
+                .whereLessThanOrEqualTo("currentLatitude", maxLat)
+                .whereGreaterThanOrEqualTo("currentLongitude", minLon)
+                .whereLessThanOrEqualTo("currentLongitude", maxLon);
+
+        ApiFuture<QuerySnapshot> future = query.get();
+        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+
+        List<User> users = new ArrayList<>();
+        for (QueryDocumentSnapshot document : documents) {
+            User user = document.toObject(User.class);
+            user.setId(document.getId());
+
+            // Calculate actual distance
+            double distance = calculateDistance(latitude, longitude,
+                    user.getCurrentLatitude(), user.getCurrentLongitude());
+
+            if (distance <= radiusKm) {
+                users.add(user);
             }
-
-            User updatedUser = userRepository.save(user);
-            logger.info("Updated status for user {} to {}", rfid, status);
-            return updatedUser;
-
-        } catch (Exception e) {
-            logger.error("Error updating status for user {}: {}", rfid, e.getMessage());
-            throw new RuntimeException("Failed to update user status", e);
         }
+        return users;
     }
 
-    public List<User> getUsersInArea(double centerLat, double centerLon, double radiusKm) {
-        double latRange = radiusKm / 111.0; // Approximate km per degree of latitude
-        double lonRange = radiusKm / (111.0 * Math.cos(Math.toRadians(centerLat)));
+    public User updateFamilyInfo(String rfid, Integer familyCount, Integer childrenCount, Integer elderlyCount) throws InterruptedException, ExecutionException {
+        Firestore db = getFirestore();
+        Query query = db.collection(COLLECTION_NAME).whereEqualTo("rfid", rfid);
+        ApiFuture<QuerySnapshot> querySnapshot = query.get();
 
-        double minLat = centerLat - latRange;
-        double maxLat = centerLat + latRange;
-        double minLon = centerLon - lonRange;
-        double maxLon = centerLon + lonRange;
-
-        return userRepository.findUsersInArea(minLat, maxLat, minLon, maxLon);
-    }
-
-    public User updateFamilyInfo(String rfid, Integer familyCount, Integer childrenCount, Integer elderlyCount) {
-        try {
-            User user = findByRfid(rfid);
-            user.setFamilyCount(familyCount);
-            user.setChildrenCount(childrenCount);
-            user.setElderlyCount(elderlyCount);
-
-            // Recalculate rescue priority if user needs rescue
-            if (user.getStatus() == User.UserStatus.NEEDS_RESCUE) {
-                int priority = calculateRescuePriority(user);
-                user.setRescuePriority(priority);
-            }
-
-            return userRepository.save(user);
-
-        } catch (Exception e) {
-            logger.error("Error updating family info for user {}: {}", rfid, e.getMessage());
-            throw new RuntimeException("Failed to update family information", e);
+        List<QueryDocumentSnapshot> documents = querySnapshot.get().getDocuments();
+        if (documents.isEmpty()) {
+            return null;
         }
+
+        DocumentReference docRef = documents.get(0).getReference();
+        ApiFuture<WriteResult> result = docRef.update(
+                "familyCount", familyCount,
+                "childrenCount", childrenCount,
+                "elderlyCount", elderlyCount
+        );
+        result.get();
+
+        // If user needs rescue, recalculate priority
+        User currentUser = documents.get(0).toObject(User.class);
+        if (currentUser.getStatus() == User.UserStatus.NEEDS_RESCUE) {
+            int priority = calculateRescuePriority(currentUser);
+            docRef.update("rescuePriority", priority).get();
+        }
+
+        User user = documents.get(0).toObject(User.class);
+        user.setId(documents.get(0).getId());
+        user.setFamilyCount(familyCount);
+        user.setChildrenCount(childrenCount);
+        user.setElderlyCount(elderlyCount);
+
+        return user;
     }
 
-    // Method to determine rescue priority
+    private double calculateDistance(Double lat1, Double lon1, Double lat2, Double lon2) {
+        if (lat1 == null || lat2 == null || lon1 == null || lon2 == null) {
+            return Double.MAX_VALUE;
+        }
+
+        final int R = 6371; // Radius of the earth in km
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
+    }
+
     private int calculateRescuePriority(User user) {
         int priority = 1; // Base priority
 

@@ -2,7 +2,6 @@ package com.tursa.user.controller;
 
 import com.tursa.user.entity.User;
 import com.tursa.user.service.UserService;
-import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,15 +42,14 @@ public class UserController {
         }
     }
 
-
-
     @GetMapping(path = "/users/rfid/{rfid}")
     public ResponseEntity<User> getUserByRfid(@PathVariable String rfid) {
         try {
             User user = userService.findByRfid(rfid);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
             return ResponseEntity.ok(user);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             logger.error("Error finding user {}: {}", rfid, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -59,16 +57,19 @@ public class UserController {
     }
 
     @PutMapping(path = "/users/location/{rfid}")
-    public ResponseEntity<User> updateLocation(@PathVariable String rfid, @RequestParam Double latitude, @RequestParam Double longitude) {
+    public ResponseEntity<User> updateLocation(@PathVariable String rfid,
+                                               @RequestParam Double latitude,
+                                               @RequestParam Double longitude) {
         try {
             if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
                 return ResponseEntity.badRequest().build();
             }
 
             User user = userService.updateLocation(rfid, latitude, longitude);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
             return ResponseEntity.ok(user);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             logger.error("Error updating location for user {}: {}", rfid, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -76,12 +77,14 @@ public class UserController {
     }
 
     @PutMapping(path = "/users/status/{rfid}")
-    public ResponseEntity<User> updateStatus(@PathVariable String rfid, @RequestParam User.UserStatus status) {
+    public ResponseEntity<User> updateStatus(@PathVariable String rfid,
+                                             @RequestParam User.UserStatus status) {
         try {
             User user = userService.updateUserStatus(rfid, status);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
             return ResponseEntity.ok(user);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             logger.error("Error updating status for user {}: {}", rfid, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -114,15 +117,17 @@ public class UserController {
     }
 
     @PutMapping(path = "/users/family/{rfid}")
-    public ResponseEntity<User> updateFamilyInfo(@PathVariable String rfid, @RequestBody User request) {
+    public ResponseEntity<User> updateFamilyInfo(@PathVariable String rfid,
+                                                 @RequestBody User request) {
         try {
             User user = userService.updateFamilyInfo(rfid,
                     request.getFamilyCount(),
                     request.getChildrenCount(),
                     request.getElderlyCount());
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
             return ResponseEntity.ok(user);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             logger.error("Error updating family info for user {}: {}", rfid, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

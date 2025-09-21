@@ -1,67 +1,23 @@
 package com.tursa.user.entity;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "users",
-        indexes = {
-                @Index(name = "idx_rfid", columnList = "rfid"),
-                @Index(name = "idx_status", columnList = "status"),
-                @Index(name = "idx_location", columnList = "current_latitude,current_longitude")
-        })
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "rfid", nullable = false, unique = true, length = 50)
+    private String id; // Firebase uses String IDs instead of Long
     private String rfid;
-
-    @Column(name = "name", nullable = false, length = 100)
     private String name;
-
-    @Column(name = "email", nullable = false)
     private String email;
-
-    @Column(name = "password", nullable = false)
     private String password;
-
-    @Column(name = "phone_number", length = 20)
     private String phoneNumber;
-
-    @Column(name = "current_latitude")
     private Double currentLatitude;
-
-    @Column(name = "current_longitude")
     private Double currentLongitude;
-
-    @Column(name = "family_count")
     private Integer familyCount = 0;
-
-    @Column(name = "children_count")
     private Integer childrenCount = 0;
-
-    @Column(name = "elderly_count")
     private Integer elderlyCount = 0;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 20)
     private UserStatus status = UserStatus.SAFE;
-
-    @Column(name = "rescue_priority")
     private Integer rescuePriority = 0;
-
-    @CreationTimestamp
-    @Column(name = "created_at")
     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     // Enum for user status
@@ -83,8 +39,8 @@ public class User {
     }
 
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
     public String getRfid() { return rfid; }
     public void setRfid(String rfid) { this.rfid = rfid; }
@@ -136,5 +92,25 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id='" + id + '\'' +
+                ", rfid='" + rfid + '\'' +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", currentLatitude=" + currentLatitude +
+                ", currentLongitude=" + currentLongitude +
+                ", familyCount=" + familyCount +
+                ", childrenCount=" + childrenCount +
+                ", elderlyCount=" + elderlyCount +
+                ", status=" + status +
+                ", rescuePriority=" + rescuePriority +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
     }
 }
