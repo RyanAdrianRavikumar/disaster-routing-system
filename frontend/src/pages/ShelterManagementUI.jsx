@@ -32,13 +32,27 @@ const CreateIcon = () => (
   </svg>
 );
 
+const LocationIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+    <circle cx="12" cy="10" r="3"></circle>
+  </svg>
+);
+
 const ShelterManagementUI = () => {
   const [shelters, setShelters] = useState([]);
   const [selectedShelter, setSelectedShelter] = useState(null);
   const [rfidTag, setRfidTag] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [newShelter, setNewShelter] = useState({ id: '', name: '', capacity: 10 });
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [newShelter, setNewShelter] = useState({ 
+    id: '', 
+    name: '', 
+    capacity: 10, 
+    latitude: '', 
+    longitude: '' 
+  });
 
   const API_BASE = 'http://localhost:8081/shelters';
 
@@ -140,25 +154,56 @@ const ShelterManagementUI = () => {
     setIsLoading(false);
   };
 
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      setIsGettingLocation(true);
+      setMessage('Getting location...');
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setNewShelter(prev => ({
+            ...prev,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          }));
+          setMessage('Location obtained successfully!');
+          setIsGettingLocation(false);
+        },
+        (error) => {
+          setMessage('Unable to get location. Please enter manually.');
+          setIsGettingLocation(false);
+        }
+      );
+    } else {
+      setMessage('Geolocation is not supported by this browser. Please enter manually.');
+    }
+  };
+
   const handleCreateShelter = async () => {
     if (!newShelter.id.trim() || !newShelter.name.trim() || newShelter.capacity <= 0) {
-      setMessage('Please fill all fields with valid values');
+      setMessage('Please fill all required fields with valid values');
       return;
     }
+
+    if (!newShelter.latitude || !newShelter.longitude) {
+      setMessage('Please provide shelter location (latitude and longitude)');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const res = await fetch(
-        `${API_BASE}/create/${encodeURIComponent(newShelter.id.trim())}?name=${encodeURIComponent(
-          newShelter.name.trim()
-        )}&capacity=${newShelter.capacity}`,
-        { method: 'POST' }
-      );
+      // Build the URL with location parameters
+      const url = `${API_BASE}/create/${encodeURIComponent(newShelter.id.trim())}?name=${encodeURIComponent(
+        newShelter.name.trim()
+      )}&capacity=${newShelter.capacity}&latitude=${newShelter.latitude}&longitude=${newShelter.longitude}`;
+      
+      const res = await fetch(url, { method: 'POST' });
       const result = await res.text();
       setMessage(result);
 
       if (res.ok) {
         await fetchShelters();
-        setNewShelter({ id: '', name: '', capacity: 10 });
+        setNewShelter({ id: '', name: '', capacity: 10, latitude: '', longitude: '' });
       }
     } catch (error) {
       console.error('Error creating shelter:', error);
@@ -171,7 +216,8 @@ const ShelterManagementUI = () => {
     const { name, value } = e.target;
     setNewShelter(prev => ({
       ...prev,
-      [name]: name === 'capacity' ? parseInt(value) || 0 : value
+      [name]: name === 'capacity' ? parseInt(value) || 0 : 
+              name === 'latitude' || name === 'longitude' ? parseFloat(value) || '' : value
     }));
   };
 
@@ -218,6 +264,13 @@ const ShelterManagementUI = () => {
                   >
                     <h3>{shelter.name}</h3>
                     <p className="shelter-id">ID: {shelter.shelterId}</p>
+                    
+                    {(shelter.latitude && shelter.longitude) && (
+                      <p className="shelter-location">
+                        <LocationIcon />
+                        {shelter.latitude.toFixed(4)}, {shelter.longitude.toFixed(4)}
+                      </p>
+                    )}
                     
                     <div className="shelter-stats">
                       <div className="shelter-stat">
@@ -287,6 +340,18 @@ const ShelterManagementUI = () => {
                        (selectedShelter.capacity - (selectedShelter.queue?.size || 0))}
                     </span>
                   </div>
+                  {(selectedShelter.latitude && selectedShelter.longitude) && (
+                    <>
+                      <div className="info-item">
+                        <span className="info-label">Latitude</span>
+                        <span className="info-value">{selectedShelter.latitude}</span>
+                      </div>
+                      <div className="info-item">
+                        <span className="info-label">Longitude</span>
+                        <span className="info-value">{selectedShelter.longitude}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
                 
                 {selectedShelter.queue?.queueList && selectedShelter.queue.queueList.length > 0 && (
@@ -352,7 +417,7 @@ const ShelterManagementUI = () => {
               <div className="shelter-form">
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Shelter ID</label>
+                    <label>Shelter ID *</label>
                     <input 
                       name="id" 
                       placeholder="Unique identifier" 
@@ -362,7 +427,7 @@ const ShelterManagementUI = () => {
                   </div>
                   
                   <div className="form-group">
-                    <label>Shelter Name</label>
+                    <label>Shelter Name *</label>
                     <input 
                       name="name" 
                       placeholder="Display name" 
@@ -372,7 +437,7 @@ const ShelterManagementUI = () => {
                   </div>
                   
                   <div className="form-group">
-                    <label>Capacity</label>
+                    <label>Capacity *</label>
                     <input
                       name="capacity"
                       type="number"
@@ -381,6 +446,48 @@ const ShelterManagementUI = () => {
                       value={newShelter.capacity}
                       onChange={handleInputChange}
                     />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label>Location *</label>
+                    <div className="location-input-group">
+                      <div className="location-coordinates">
+                        <div className="input-with-icon">
+                          <LocationIcon />
+                          <input
+                            type="number"
+                            step="any"
+                            name="latitude"
+                            value={newShelter.latitude}
+                            onChange={handleInputChange}
+                            placeholder="Latitude"
+                            required
+                          />
+                        </div>
+                        <div className="input-with-icon">
+                          <LocationIcon />
+                          <input
+                            type="number"
+                            step="any"
+                            name="longitude"
+                            value={newShelter.longitude}
+                            onChange={handleInputChange}
+                            placeholder="Longitude"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={getCurrentLocation}
+                        className="location-btn"
+                        disabled={isGettingLocation}
+                      >
+                        {isGettingLocation ? 'Getting Location...' : 'Get My Location'}
+                      </button>
+                    </div>
                   </div>
                 </div>
                 

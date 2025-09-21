@@ -28,7 +28,7 @@ public class NotificationService {
 
         // Call User microservice
         ResponseEntity<UserDTO[]> response =
-                restTemplate.getForEntity("http://localhost:8080/users/all", UserDTO[].class);
+                restTemplate.getForEntity("http://localhost:8082/users/all", UserDTO[].class);
 
         if (response.getBody() == null) {
             return "❌ No users found or service unavailable";

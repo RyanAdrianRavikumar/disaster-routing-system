@@ -16,7 +16,7 @@ public class RescueService {
     private final RescueQueue rescueQueue = new RescueQueue(50);
     private final RestTemplate restTemplate = new RestTemplate(); // can be @Autowired
 
-    private static final String USER_SERVICE_URL = "http://localhost:8080/users/all"; // adjust as needed
+    private static final String USER_SERVICE_URL = "http://localhost:8082/users/all"; // adjust as needed
 
     // Fetch users from User microservice, convert to DTOs, sort, and enqueue
     public String enqueueUsersFromUserService() {

@@ -48,13 +48,13 @@ public class ShelterService {
         return List.copyOf(shelters.values());
     }
 
-    // Create a new shelter
-    public String createShelter(String shelterId, String name, int capacity) {
+    // Create a new shelter (with latitude & longitude)
+    public String createShelter(String shelterId, String name, int capacity, Double latitude, Double longitude) {
         if (shelters.containsKey(shelterId)) {
             return "Shelter already exists";
         }
 
-        Shelter shelter = new Shelter(shelterId, name, capacity);
+        Shelter shelter = new Shelter(shelterId, name, capacity, latitude, longitude);
         shelters.put(shelterId, shelter);
 
         // Async save to Firebase
@@ -63,7 +63,8 @@ public class ShelterService {
             return null;
         });
 
-        return "Shelter " + shelterId + " created with capacity " + capacity;
+        return "Shelter " + shelterId + " created with capacity " + capacity +
+                " at location (" + latitude + ", " + longitude + ")";
     }
 
     // Check-in a user
