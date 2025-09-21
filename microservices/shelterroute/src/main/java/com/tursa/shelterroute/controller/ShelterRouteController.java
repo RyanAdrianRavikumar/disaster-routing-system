@@ -42,6 +42,21 @@ public class ShelterRouteController {
         return ResponseEntity.ok(service.createShelter(shelterId, name, capacity, latitude, longitude));
     }
 
+    @PutMapping("/shelters/{shelterId}")
+    public ResponseEntity<String> updateShelter(
+            @PathVariable String shelterId,
+            @RequestParam String name,
+            @RequestParam int capacity,
+            @RequestParam double latitude,
+            @RequestParam double longitude) {
+        return ResponseEntity.ok(service.updateShelter(shelterId, name, capacity, latitude, longitude));
+    }
+
+    @DeleteMapping("/shelters/{shelterId}")
+    public ResponseEntity<String> deleteShelter(@PathVariable String shelterId) {
+        return ResponseEntity.ok(service.deleteShelter(shelterId));
+    }
+
     @PostMapping("/shelters/{shelterId}/checkin/{rfidTag}")
     public ResponseEntity<String> checkInUser(
             @PathVariable String shelterId,

@@ -71,3 +71,122 @@
 .path-arrow {
     color: #007bff;
 }
+
+.form-container {
+    margin-bottom: 20px;
+}
+
+.form-container h2 {
+    margin-bottom: 10px;
+}
+
+.form-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+.form-container input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.form-container button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.form-container button:hover {
+    background-color: #218838;
+}
+
+.form-container button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.checkin-container {
+    margin-bottom: 20px;
+}
+
+.checkin-container h2 {
+    margin-bottom: 10px;
+}
+
+.checkin-form {
+    display: flex;
+    gap: 10px;
+    max-width: 400px;
+}
+
+.checkin-form input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    flex-grow: 1;
+}
+
+.shelter-list {
+    margin-top: 20px;
+}
+
+.shelter-list table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.shelter-list th,
+.shelter-list td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.shelter-list th {
+    background-color: #f2f2f2;
+}
+
+.shelter-list button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.shelter-list button:hover {
+    background-color: #0056b3;
+}
+
+.shelter-list button:nth-child(2) {
+    background-color: #dc3545;
+}
+
+.shelter-list button:nth-child(2):hover {
+    background-color: #c82333;
+}
+
+.shelter-list button:nth-child(3) {
+    background-color: #28a745;
+}
+
+.shelter-list button:nth-child(3):hover {
+    background-color: #218838;
+}
+
+.shelter-list button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.map-container {
+    margin-bottom: 20px;
+}

@@ -114,6 +114,33 @@ public class ShelterRouteService {
         return "Shelter " + shelterId + " created with capacity " + capacity;
     }
 
+    public String updateShelter(String shelterId, String name, int capacity, double latitude, double longitude) {
+        Shelter shelter = shelters.get(shelterId);
+        if (shelter == null) {
+            return "Shelter not found";
+        }
+        shelter.setName(name);
+        shelter.setCapacity(capacity);
+        shelter.setLatitude(latitude);
+        shelter.setLongitude(longitude);
+        shelters.put(shelterId, shelter);
+        database.getReference("shelters").child(shelterId).setValueAsync(shelter);
+        addNode(new Node(shelterId, name, latitude, longitude)); // Update node
+        return "Shelter " + shelterId + " updated";
+    }
+
+    public String deleteShelter(String shelterId) {
+        Shelter shelter = shelters.get(shelterId);
+        if (shelter == null) {
+            return "Shelter not found";
+        }
+        shelters.remove(shelterId);
+        nodes.remove(shelterId); // Remove corresponding node
+        database.getReference("shelters").child(shelterId).removeValueAsync();
+        database.getReference("nodes").child(shelterId).removeValueAsync();
+        return "Shelter " + shelterId + " deleted";
+    }
+
     public String checkInUser(String shelterId, String rfidTag) {
         Shelter shelter = shelters.get(shelterId);
         if (shelter == null) {

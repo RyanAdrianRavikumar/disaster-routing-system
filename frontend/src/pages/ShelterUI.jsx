@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import '../styles/ShelterUI.css';
 
-// Fix Leaflet icon paths for React
+// Fix Leaflet icon paths
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
@@ -11,16 +11,7 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
 });
 
-// Custom icons for map markers
-const userIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
-    shadowSize: [41, 41]
-});
-
+// Custom icons
 const shelterIconAvailable = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
     iconSize: [25, 41],
@@ -45,88 +36,15 @@ const MOCK_SHELTERS = [
     { shelterId: 'D', name: 'Shelter D', capacity: 15, queue: ['user1'], latitude: 40.7428, longitude: -74.0360, remainingCapacity: 14 }
 ];
 
-const MOCK_NODES = [
-    { id: 'A', name: 'Point A', latitude: 40.7128, longitude: -74.0060 },
-    { id: 'B', name: 'Point B', latitude: 40.7228, longitude: -74.0160 },
-    { id: 'C', name: 'Point C', latitude: 40.7328, longitude: -74.0260 },
-    { id: 'D', name: 'Point D', latitude: 40.7428, longitude: -74.0360 },
-    { id: 'E', name: 'Point E', latitude: 40.7528, longitude: -74.0460 }
-];
-
-const MOCK_PATH = {
-    path: ['A', 'B', 'D'],
-    distance: 13.0,
-    shelterName: 'Shelter D',
-    shelterId: 'D'
-};
-
 const ShelterUI = () => {
-    // Initialize states with sensible defaults
-    const [userLocation, setUserLocation] = useState({ lat: 40.7128, lng: -74.0060 }); // Default to NYC
     const [shelters, setShelters] = useState(MOCK_SHELTERS);
-    const [nodes, setNodes] = useState(MOCK_NODES);
-    const [shortestPath, setShortestPath] = useState([]);
-    const [routeResult, setRouteResult] = useState(null);
-    const [selectedShelter, setSelectedShelter] = useState(null);
+    const [formData, setFormData] = useState({ shelterId: '', name: '', latitude: '', longitude: '', capacity: '' });
+    const [editingId, setEditingId] = useState(null);
+    const [rfidTag, setRfidTag] = useState('');
     const [message, setMessage] = useState('Initializing...');
     const [isLoading, setIsLoading] = useState(false);
     const [useMockData, setUseMockData] = useState(false);
-
     const SHELTERROUTE_API_BASE = 'http://localhost:8081/api';
-    const USER_API_BASE = 'http://localhost:8080/api/users';
-
-    // Memoize fetch functions to prevent redefinition
-    const fetchUserLocation = useCallback(async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                setMessage('Please log in to fetch user location');
-                fallbackToGeolocation();
-                return;
-            }
-            const res = await fetch(`${USER_API_BASE}/current`, {
-                method: 'GET',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const userData = await res.json();
-                if (userData.latitude && userData.longitude) {
-                    setUserLocation({ lat: userData.latitude, lng: userData.longitude });
-                    console.log('User location fetched:', userData);
-                    setMessage('User location loaded');
-                } else {
-                    setMessage('Invalid user location data');
-                    fallbackToGeolocation();
-                }
-            } else {
-                console.error('User location fetch failed:', res.status, res.statusText);
-                setMessage(`User location fetch failed (${res.status})`);
-                fallbackToGeolocation();
-            }
-        } catch (error) {
-            console.error('User location fetch error:', error.message);
-            setMessage('Error fetching user location: ' + error.message);
-            fallbackToGeolocation();
-        }
-    }, []);
-
-    const fallbackToGeolocation = useCallback(() => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                pos => {
-                    setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-                    console.log('Geolocation success:', pos.coords);
-                    setMessage('Using geolocation');
-                },
-                err => {
-                    console.warn('Geolocation failed:', err.message);
-                    setMessage('Geolocation failed. Using default location (NYC).');
-                }
-            );
-        } else {
-            setMessage('Geolocation not supported. Using default location (NYC).');
-        }
-    }, []);
 
     const fetchShelters = useCallback(async () => {
         try {
@@ -155,108 +73,173 @@ const ShelterUI = () => {
         }
     }, []);
 
-    const fetchNodes = useCallback(async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${SHELTERROUTE_API_BASE}/nodes`, {
-                method: 'GET',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setNodes(data);
-                console.log('Nodes fetched:', data);
-                setMessage('Nodes loaded');
-            } else {
-                console.error('Nodes fetch failed:', res.status, res.statusText);
-                setMessage(`Nodes fetch failed (${res.status}). Using mock data.`);
-                setUseMockData(true);
-            }
-        } catch (error) {
-            console.error('Nodes fetch error:', error.message);
-            setMessage('Error fetching nodes: ' + error.message + '. Using mock data.');
-            setUseMockData(true);
+    useEffect(() => {
+        if (useMockData) {
+            setShelters(MOCK_SHELTERS);
+            setMessage('Using mock data');
+        } else {
+            fetchShelters();
         }
-    }, []);
+    }, [useMockData, fetchShelters]);
 
-    const findNearestPath = useCallback(async () => {
-        if (!userLocation.lat || !userLocation.lng) {
-            setMessage('User location not available');
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
+
+    const handleRfidChange = (e) => {
+        setRfidTag(e.target.value);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.shelterId || !formData.name || !formData.latitude || !formData.longitude || !formData.capacity) {
+            setMessage('All fields are required');
             return;
         }
         setIsLoading(true);
-        if (useMockData) {
-            setRouteResult(MOCK_PATH);
-            setSelectedShelter(MOCK_PATH.shelterName);
-            const pathCoords = MOCK_PATH.path.map(nodeId => {
-                const node = MOCK_NODES.find(n => n.id === nodeId);
-                return node ? [node.latitude, node.longitude] : null;
-            }).filter(coord => coord !== null);
-            setShortestPath(pathCoords);
-            setMessage('Path displayed using mock data');
-            setIsLoading(false);
-        } else {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    setMessage('Please log in to find path');
-                    setIsLoading(false);
-                    return;
-                }
-                const res = await fetch(`${SHELTERROUTE_API_BASE}/nearest-shelter-path?userLat=${userLocation.lat}&userLng=${userLocation.lng}`, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.error) {
-                        setMessage(data.error);
-                        setShortestPath([]);
-                        setRouteResult(null);
-                        setSelectedShelter(null);
-                    } else {
-                        setRouteResult({ path: data.path, distance: data.distance });
-                        setSelectedShelter(data.shelterName);
-                        const pathCoords = data.path.map(nodeId => {
-                            const node = nodes.find(n => n.id === nodeId);
-                            return node ? [node.latitude, node.longitude] : null;
-                        }).filter(coord => coord !== null);
-                        setShortestPath(pathCoords);
-                        setMessage('Path found to nearest shelter');
-                    }
-                } else {
-                    console.error('Path fetch failed:', res.status, res.statusText);
-                    setMessage(`Path fetch failed (${res.status}). Using mock data.`);
-                    setUseMockData(true);
-                }
-            } catch (error) {
-                console.error('Path fetch error:', error.message);
-                setMessage('Error finding path: ' + error.message + '. Using mock data.');
-                setUseMockData(true);
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setMessage('Please log in to perform this action');
+                setIsLoading(false);
+                return;
             }
-            setIsLoading(false);
+            const url = editingId
+                ? `${SHELTERROUTE_API_BASE}/shelters/${editingId}?name=${encodeURIComponent(formData.name)}&capacity=${formData.capacity}&latitude=${formData.latitude}&longitude=${formData.longitude}`
+                : `${SHELTERROUTE_API_BASE}/shelters/${formData.shelterId}?name=${encodeURIComponent(formData.name)}&capacity=${formData.capacity}&latitude=${formData.latitude}&longitude=${formData.longitude}`;
+            const method = editingId ? 'PUT' : 'POST';
+            const res = await fetch(url, {
+                method,
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const message = await res.text();
+                setMessage(message);
+                fetchShelters(); // Refresh shelters
+                resetForm();
+            } else {
+                console.error('Shelter operation failed:', res.status, res.statusText);
+                setMessage(`Operation failed (${res.status}): ${res.statusText}`);
+            }
+        } catch (error) {
+            console.error('Shelter operation error:', error.message);
+            setMessage('Error: ' + error.message);
         }
-    }, [userLocation, nodes, useMockData]);
+        setIsLoading(false);
+    };
 
-    useEffect(() => {
-        console.log('ShelterUI mounted', { useMockData });
-        if (useMockData) {
-            setShelters(MOCK_SHELTERS);
-            setNodes(MOCK_NODES);
-            setMessage('Using mock data');
-            fallbackToGeolocation();
-        } else {
-            fetchUserLocation();
-            fetchShelters();
-            fetchNodes();
+    const handleEdit = (shelter) => {
+        setFormData({
+            shelterId: shelter.shelterId,
+            name: shelter.name,
+            latitude: shelter.latitude,
+            longitude: shelter.longitude,
+            capacity: shelter.capacity
+        });
+        setEditingId(shelter.shelterId);
+    };
+
+    const handleDelete = async (shelterId) => {
+        if (!window.confirm('Are you sure you want to delete this shelter?')) return;
+        setIsLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setMessage('Please log in to perform this action');
+                setIsLoading(false);
+                return;
+            }
+            const res = await fetch(`${SHELTERROUTE_API_BASE}/shelters/${shelterId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const message = await res.text();
+                setMessage(message);
+                fetchShelters(); // Refresh shelters
+            } else {
+                console.error('Delete failed:', res.status, res.statusText);
+                setMessage(`Delete failed (${res.status}): ${res.statusText}`);
+            }
+        } catch (error) {
+            console.error('Delete error:', error.message);
+            setMessage('Error deleting shelter: ' + error.message);
         }
-    }, [useMockData, fetchUserLocation, fetchShelters, fetchNodes]);
+        setIsLoading(false);
+    };
+
+    const handleCheckIn = async (shelterId) => {
+        if (!rfidTag) {
+            setMessage('Please enter an RFID tag');
+            return;
+        }
+        setIsLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setMessage('Please log in to perform this action');
+                setIsLoading(false);
+                return;
+            }
+            const res = await fetch(`${SHELTERROUTE_API_BASE}/shelters/${shelterId}/checkin/${rfidTag}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const message = await res.text();
+                setMessage(message);
+                fetchShelters(); // Refresh shelters
+                setRfidTag('');
+            } else {
+                console.error('Check-in failed:', res.status, res.statusText);
+                setMessage(`Check-in failed (${res.status}): ${res.statusText}`);
+            }
+        } catch (error) {
+            console.error('Check-in error:', error.message);
+            setMessage('Error checking in: ' + error.message);
+        }
+        setIsLoading(false);
+    };
+
+    const handleCheckOut = async (shelterId) => {
+        setIsLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setMessage('Please log in to perform this action');
+                setIsLoading(false);
+                return;
+            }
+            const res = await fetch(`${SHELTERROUTE_API_BASE}/shelters/${shelterId}/checkout`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const message = await res.text();
+                setMessage(message);
+                fetchShelters(); // Refresh shelters
+            } else {
+                console.error('Check-out failed:', res.status, res.statusText);
+                setMessage(`Check-out failed (${res.status}): ${res.statusText}`);
+            }
+        } catch (error) {
+            console.error('Check-out error:', error.message);
+            setMessage('Error checking out: ' + error.message);
+        }
+        setIsLoading(false);
+    };
+
+    const resetForm = () => {
+        setFormData({ shelterId: '', name: '', latitude: '', longitude: '', capacity: '' });
+        setEditingId(null);
+    };
 
     return (
         <div className="shelter-route-container">
             <header className="app-header">
-                <h1>Shelter Route Finder</h1>
-                <p>Find the shortest path to the nearest available shelter</p>
+                <h1>Shelter Management</h1>
+                <p>Manage shelters and their capacities</p>
             </header>
             {message && (
                 <div className="message-banner">
@@ -266,24 +249,85 @@ const ShelterUI = () => {
             )}
             <div className="controls">
                 <button
-                    onClick={findNearestPath}
-                    disabled={isLoading || !userLocation.lat}
-                    className="find-path-btn"
-                >
-                    {isLoading ? 'Loading...' : 'Find Nearest Shelter'}
-                </button>
-                <button
                     onClick={() => setUseMockData(!useMockData)}
                     className="toggle-btn"
                 >
                     {useMockData ? 'Use Real Data' : 'Use Mock Data'}
                 </button>
             </div>
-            {userLocation.lat && userLocation.lng ? (
+            <div className="form-container">
+                <h2>{editingId ? 'Edit Shelter' : 'Add New Shelter'}</h2>
+                <form onSubmit={handleSubmit}>
+                    <input
+                        type="text"
+                        name="shelterId"
+                        value={formData.shelterId}
+                        onChange={handleInputChange}
+                        placeholder="Shelter ID (e.g., S1)"
+                        disabled={isLoading || editingId}
+                    />
+                    <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        placeholder="Shelter Name"
+                        disabled={isLoading}
+                    />
+                    <input
+                        type="number"
+                        name="latitude"
+                        value={formData.latitude}
+                        onChange={handleInputChange}
+                        placeholder="Latitude (e.g., 40.7128)"
+                        step="any"
+                        disabled={isLoading}
+                    />
+                    <input
+                        type="number"
+                        name="longitude"
+                        value={formData.longitude}
+                        onChange={handleInputChange}
+                        placeholder="Longitude (e.g., -74.0060)"
+                        step="any"
+                        disabled={isLoading}
+                    />
+                    <input
+                        type="number"
+                        name="capacity"
+                        value={formData.capacity}
+                        onChange={handleInputChange}
+                        placeholder="Capacity (e.g., 10)"
+                        min="1"
+                        disabled={isLoading}
+                    />
+                    <button type="submit" disabled={isLoading}>
+                        {isLoading ? 'Processing...' : editingId ? 'Update Shelter' : 'Add Shelter'}
+                    </button>
+                    {editingId && (
+                        <button type="button" onClick={resetForm} disabled={isLoading}>
+                            Cancel Edit
+                        </button>
+                    )}
+                </form>
+            </div>
+            <div className="checkin-container">
+                <h2>Check In User</h2>
+                <div className="checkin-form">
+                    <input
+                        type="text"
+                        value={rfidTag}
+                        onChange={handleRfidChange}
+                        placeholder="RFID Tag (e.g., user123)"
+                        disabled={isLoading}
+                    />
+                </div>
+            </div>
+            <div className="map-container">
                 <MapContainer
-                    center={[userLocation.lat, userLocation.lng]}
+                    center={[40.7128, -74.0060]}
                     zoom={13}
-                    style={{ height: '500px', width: '100%' }}
+                    style={{ height: '400px', width: '100%' }}
                 >
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     {shelters.map(shelter => (
@@ -301,30 +345,50 @@ const ShelterUI = () => {
                             </Marker>
                         )
                     ))}
-                    <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
-                        <Popup>Your Location</Popup>
-                    </Marker>
-                    {shortestPath.length > 0 && (
-                        <Polyline positions={shortestPath} color="blue" />
-                    )}
                 </MapContainer>
-            ) : (
-                <div className="message-banner">Waiting for user location...</div>
-            )}
-            {routeResult && (
-                <div className="path-result">
-                    <h2>Shortest Path to {selectedShelter}</h2>
-                    <div className="path-nodes">
-                        {routeResult.path.map((node, index) => (
-                            <span key={node} className="path-node">
-                                {node}
-                                {index < routeResult.path.length - 1 && <span className="path-arrow">→</span>}
-                            </span>
+            </div>
+            <div className="shelter-list">
+                <h2>Shelter List</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>Capacity</th>
+                            <th>Remaining</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {shelters.map(shelter => (
+                            <tr key={shelter.shelterId}>
+                                <td>{shelter.shelterId}</td>
+                                <td>{shelter.name}</td>
+                                <td>{shelter.latitude}</td>
+                                <td>{shelter.longitude}</td>
+                                <td>{shelter.capacity}</td>
+                                <td>{shelter.remainingCapacity}</td>
+                                <td>
+                                    <button onClick={() => handleEdit(shelter)} disabled={isLoading}>
+                                        Edit
+                                    </button>
+                                    <button onClick={() => handleDelete(shelter.shelterId)} disabled={isLoading}>
+                                        Delete
+                                    </button>
+                                    <button onClick={() => handleCheckIn(shelter.shelterId)} disabled={isLoading || !rfidTag}>
+                                        Check In
+                                    </button>
+                                    <button onClick={() => handleCheckOut(shelter.shelterId)} disabled={isLoading}>
+                                        Check Out
+                                    </button>
+                                </td>
+                            </tr>
                         ))}
-                    </div>
-                    <p>Distance: {routeResult.distance.toFixed(2)} km</p>
-                </div>
-            )}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 };
