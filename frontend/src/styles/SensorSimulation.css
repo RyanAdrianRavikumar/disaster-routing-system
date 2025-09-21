@@ -353,3 +353,67 @@
     justify-content: center;
   }
 }
+
+/* Add these styles to your SensorSimulation.css file */
+
+.disaster-form {
+  border: 2px solid #ff9800;
+  background: linear-gradient(to bottom right, #fff3e0, #fff9e6);
+}
+
+.disaster-form-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.disaster-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.disaster-form-section h3 {
+  margin: 0;
+  color: #1a75bc;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #ffe0b2;
+  padding-bottom: 10px;
+}
+
+.close-disaster-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  margin-left: auto;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.close-disaster-btn:hover {
+  background-color: #ffe0b2;
+  color: #333;
+}
+
+/* Responsive adjustments for disaster form */
+@media (max-width: 1024px) {
+  .disaster-form-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .disaster-form-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .sensor-section-header {
+    flex-wrap: wrap;
+  }
+  
+  .close-disaster-btn {
+    margin-top: 10px;
+  }
+}

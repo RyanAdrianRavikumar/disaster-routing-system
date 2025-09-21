@@ -65,10 +65,18 @@ const DisasterIcon = () => (
   </svg>
 );
 
+const CloseIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
+  </svg>
+);
+
 const SensorSimulation = () => {
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState('');
   const [responseType, setResponseType] = useState('');
+  const [showDisasterForm, setShowDisasterForm] = useState(false);
   
   // Form states
   const [recordData, setRecordData] = useState({
@@ -82,7 +90,13 @@ const SensorSimulation = () => {
     sensorId: ''
   });
 
+  // Disaster simulation states
+  const [disasterType, setDisasterType] = useState("");
+  const [disasterDescription, setDisasterDescription] = useState("");
+  const [customMessage, setCustomMessage] = useState("");
+
   const API_BASE_URL = 'http://localhost:8085/api/sensors';
+  const DISASTER_API_URL = 'http://localhost:8083/disaster';
 
   const makeRequest = async (url, method = 'GET', params = {}) => {
     setLoading(true);
@@ -133,17 +147,59 @@ const SensorSimulation = () => {
     makeRequest(`${API_BASE_URL}/test`);
   };
 
-  const handleSimulateDisaster = () => {
-    // Simulate multiple sensor data for a disaster scenario
+  const simulateDisaster = async () => {
     setLoading(true);
     setResponse('');
     
-    // Simulate API calls for multiple sensors
-    setTimeout(() => {
-      setResponse('Disaster scenario simulated! Multiple sensors reporting obstacles.');
-      setResponseType('success');
+    try {
+      const res = await fetch(
+        `${DISASTER_API_URL}/simulate?disasterType=${encodeURIComponent(
+          disasterType
+        )}&description=${encodeURIComponent(disasterDescription)}`,
+        {
+          method: "POST",
+        }
+      );
+      const text = await res.text();
+      setResponse(text);
+      setResponseType(res.ok ? 'success' : 'error');
+    } catch (err) {
+      console.error(err);
+      setResponse("Error sending disaster notification");
+      setResponseType('error');
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
+  };
+
+  const sendCustomMessage = async () => {
+    setLoading(true);
+    setResponse('');
+    
+    try {
+      const res = await fetch(
+        `${DISASTER_API_URL}/message?message=${encodeURIComponent(
+          customMessage
+        )}`,
+        {
+          method: "POST",
+        }
+      );
+      const text = await res.text();
+      setResponse(text);
+      setResponseType(res.ok ? 'success' : 'error');
+    } catch (err) {
+      console.error(err);
+      setResponse("Error sending custom message");
+      setResponseType('error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleDisasterForm = () => {
+    setShowDisasterForm(!showDisasterForm);
+    setResponse('');
   };
 
   return (
@@ -165,14 +221,86 @@ const SensorSimulation = () => {
           {/* Simulate Disaster Button */}
           <div className="disaster-button-container">
             <button
-              onClick={handleSimulateDisaster}
-              disabled={loading}
+              onClick={toggleDisasterForm}
               className="btn btn-warning"
             >
               <DisasterIcon />
-              Simulate Disaster
+              {showDisasterForm ? 'Hide Disaster Form' : 'Simulate Disaster'}
             </button>
           </div>
+
+          {/* Disaster Simulation Form */}
+          {showDisasterForm && (
+            <div className="sensor-card disaster-form">
+              <div className="sensor-section-header">
+                <DisasterIcon />
+                <h2>Disaster Simulation</h2>
+                <button 
+                  onClick={toggleDisasterForm} 
+                  className="close-disaster-btn"
+                  title="Close disaster form"
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+              
+              <div className="disaster-form-content">
+                <div className="disaster-form-section">
+                  <h3>Simulate Disaster</h3>
+                  <div className="input-group left-align">
+                    <label>Disaster Type</label>
+                    <input
+                      type="text"
+                      value={disasterType}
+                      onChange={(e) => setDisasterType(e.target.value)}
+                      placeholder="e.g., Earthquake, Flood, Hurricane"
+                    />
+                  </div>
+                  
+                  <div className="input-group left-align">
+                    <label>Description</label>
+                    <textarea
+                      value={disasterDescription}
+                      onChange={(e) => setDisasterDescription(e.target.value)}
+                      placeholder="Detailed description of the disaster"
+                      rows="3"
+                    />
+                  </div>
+                  
+                  <button
+                    onClick={simulateDisaster}
+                    disabled={loading}
+                    className="btn btn-danger"
+                  >
+                    {loading ? <LoaderIcon className="btn-spinner" /> : <DisasterIcon />}
+                    Send Disaster Notification
+                  </button>
+                </div>
+
+                <div className="disaster-form-section">
+                  <h3>Send Custom Message</h3>
+                  <div className="input-group left-align">
+                    <label>Custom Message</label>
+                    <textarea
+                      value={customMessage}
+                      onChange={(e) => setCustomMessage(e.target.value)}
+                      placeholder="Enter your custom emergency message"
+                      rows="3"
+                    />
+                  </div>
+                  
+                  <button
+                    onClick={sendCustomMessage}
+                    disabled={loading}
+                    className="btn btn-primary"
+                  >
+                    {loading ? <LoaderIcon className="btn-spinner" /> : <DisasterIcon />}
+                    Send Custom Message
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="sensor-grid">
             {/* Record Sensor Data */}
@@ -297,26 +425,6 @@ const SensorSimulation = () => {
               </button>
             </div>
           </div>
-
-          {/* Response Display */}
-          {response && (
-            <div className="sensor-card">
-              <div className="response-header">
-                {responseType === 'success' ? (
-                  <CheckCircleIcon className="success-icon" />
-                ) : (
-                  <AlertCircleIcon className="error-icon" />
-                )}
-                <h3>
-                  {responseType === 'success' ? 'Success' : 'Error'}
-                </h3>
-              </div>
-              
-              <div className="response-content">
-                <pre>{response}</pre>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
