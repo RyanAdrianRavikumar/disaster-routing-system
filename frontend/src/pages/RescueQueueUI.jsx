@@ -2,156 +2,86 @@ import React, { useState, useEffect, useCallback } from 'react';
 import '../styles/RescueQueueUI.css';
 
 const RescueQueueUI = () => {
+  const BASE_URL = 'http://localhost:8087/rescue';
+
   const [queue, setQueue] = useState([]);
   const [nextUser, setNextUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [newFamily, setNewFamily] = useState({
-    name: '',
-    address: '',
-    children: 0,
-    elderly: 0,
-    specialNeeds: ''
-  });
   const [isEmpty, setIsEmpty] = useState(true);
   const [isFull, setIsFull] = useState(false);
 
-  // Calculate priority function
-  const calculatePriority = useCallback((children, elderly) => {
-    return children * 2 + elderly * 3;
-  }, []);
-
-  // Simulate queue data
-  const simulateQueueData = useCallback((size) => {
-    const simulatedQueue = Array.from({ length: size }, (_, i) => ({
-      id: i + 1,
-      name: `Family ${i + 1}`,
-      address: `Address ${i + 1}`,
-      children: Math.floor(Math.random() * 4),
-      elderly: Math.floor(Math.random() * 3),
-      specialNeeds: i % 3 === 0 ? 'Medical assistance needed' : 'None',
-      priority: calculatePriority(Math.floor(Math.random() * 4), Math.floor(Math.random() * 3))
-    }));
-    setQueue(simulatedQueue);
-  }, [calculatePriority]);
-
-  // Fetch queue size
-  const fetchQueueSize = useCallback(async () => {
+  // Fetch entire queue from backend
+  const fetchQueue = useCallback(async () => {
     try {
-      const response = await fetch('/rescue/size');
-      const size = await response.json();
-      if (size > 0) {
-        simulateQueueData(size);
+      // Fetch all users currently in queue
+      const usersResp = await fetch(`${BASE_URL}/users`);
+      if (usersResp.ok) {
+        const users = await usersResp.json();
+        setQueue(users);
       } else {
         setQueue([]);
       }
-    } catch (error) {
-      console.error('Error fetching queue size:', error);
-    }
-  }, [simulateQueueData]);
 
-  // Fetch next user
-  const fetchNextUser = useCallback(async () => {
-    try {
-      const response = await fetch('/rescue/peek');
-      if (response.ok) {
-        const user = await response.json();
+      // Fetch next user
+      const nextResp = await fetch(`${BASE_URL}/peek`);
+      if (nextResp.ok) {
+        const user = await nextResp.json();
         setNextUser(user);
       } else {
         setNextUser(null);
       }
+
+      // Fetch status
+      const emptyResp = await fetch(`${BASE_URL}/isEmpty`);
+      const fullResp = await fetch(`${BASE_URL}/isFull`);
+      setIsEmpty(await emptyResp.json());
+      setIsFull(await fullResp.json());
+
     } catch (error) {
-      console.error('Error fetching next user:', error);
+      console.error('Error fetching queue:', error);
     }
   }, []);
 
-  // Fetch queue status (isEmpty, isFull)
-  const fetchQueueStatus = useCallback(async () => {
-    try {
-      const emptyResponse = await fetch('/rescue/isEmpty');
-      const emptyStatus = await emptyResponse.json();
-      setIsEmpty(emptyStatus);
-
-      const fullResponse = await fetch('/rescue/isFull');
-      const fullStatus = await fullResponse.json();
-      setIsFull(fullStatus);
-    } catch (error) {
-      console.error('Error fetching queue status:', error);
-    }
-  }, []);
-
-  // Fetch queue data on component mount
   useEffect(() => {
-    fetchQueueSize();
-    fetchNextUser();
-    fetchQueueStatus();
-  }, [fetchQueueSize, fetchNextUser, fetchQueueStatus]);
+    fetchQueue();
+    const interval = setInterval(fetchQueue, 5000);
+    return () => clearInterval(interval);
+  }, [fetchQueue]);
+
+  const handleEnqueueUsers = async () => {
+    setIsLoading(true);
+    try {
+      const resp = await fetch(`${BASE_URL}/enqueue`, { method: 'POST' });
+      if (resp.ok) {
+        setMessage(await resp.text());
+        await fetchQueue();
+      } else {
+        setMessage('Failed to enqueue users');
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage('Error while enqueuing users');
+    }
+    setIsLoading(false);
+  };
 
   const handleRescueNext = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/rescue', { method: 'POST' });
-      if (response.ok) {
-        const rescuedUser = await response.json();
-        setMessage(`Rescued: ${rescuedUser.name || 'Family'}`);
-        fetchQueueSize();
-        fetchNextUser();
-        fetchQueueStatus();
+      const resp = await fetch(`${BASE_URL}`, { method: 'POST' });
+      if (resp.ok) {
+        const rescued = await resp.json();
+        setMessage(`Rescued: ${rescued.name || 'Family'}`);
+        await fetchQueue();
       } else {
         setMessage('Queue is empty');
       }
-    } catch (error) {
-      console.error('Error rescuing user:', error);
-      setMessage('Error occurred during rescue');
+    } catch (err) {
+      console.error(err);
+      setMessage('Error during rescue');
     }
     setIsLoading(false);
-  };
-
-  const handleAddFamily = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    const familyToAdd = {
-      ...newFamily,
-      priority: calculatePriority(newFamily.children, newFamily.elderly)
-    };
-    
-    try {
-      const response = await fetch('/rescue/enqueue', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify([familyToAdd]),
-      });
-      
-      if (response.ok) {
-        const msg = await response.text();
-        setMessage(msg);
-        setNewFamily({
-          name: '',
-          address: '',
-          children: 0,
-          elderly: 0,
-          specialNeeds: ''
-        });
-        fetchQueueSize();
-        fetchNextUser();
-        fetchQueueStatus();
-      }
-    } catch (error) {
-      console.error('Error adding family:', error);
-      setMessage('Error adding family to queue');
-    }
-    setIsLoading(false);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewFamily(prev => ({
-      ...prev,
-      [name]: name === 'children' || name === 'elderly' ? parseInt(value) || 0 : value
-    }));
   };
 
   return (
@@ -169,11 +99,7 @@ const RescueQueueUI = () => {
           </div>
           <div className="stat-card">
             <h3>Next in Line</h3>
-            <p className="stat-number">{nextUser ? 'Family Ready' : 'None'}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Status</h3>
-            <p className="stat-number">{queue.length > 0 ? 'Active' : 'Empty'}</p>
+            <p className="stat-number">{nextUser ? nextUser.name : 'None'}</p>
           </div>
           <div className="stat-card">
             <h3>Queue Empty?</h3>
@@ -192,55 +118,31 @@ const RescueQueueUI = () => {
           </div>
         )}
 
-        <div className="content-area">
-          <div className="next-rescue-section">
-            <h2>Next Rescue Priority</h2>
-            {nextUser ? (
-              <div className="next-family-card">
-                <h3>{nextUser.name || 'Unnamed Family'}</h3>
-                <p><strong>Address:</strong> {nextUser.address || 'Unknown'}</p>
-                <div className="family-stats">
-                  <span className="stat-tag children">Children: {nextUser.children || 0}</span>
-                  <span className="stat-tag elderly">Elderly: {nextUser.elderly || 0}</span>
-                  <span className="stat-tag priority">Priority: {nextUser.priority || calculatePriority(nextUser.children || 0, nextUser.elderly || 0)}</span>
-                </div>
-                <p><strong>Special Needs:</strong> {nextUser.specialNeeds || 'None reported'}</p>
-                <button 
-                  onClick={handleRescueNext} 
-                  disabled={isLoading}
-                  className="rescue-btn"
-                >
-                  {isLoading ? 'Processing...' : 'Rescue This Family'}
-                </button>
-              </div>
-            ) : (
-              <p>No families currently in the queue.</p>
-            )}
-          </div>
+        <div className="actions-panel">
+          <button onClick={handleEnqueueUsers} disabled={isLoading}>
+            {isLoading ? 'Enqueuing...' : 'Enqueue All Users'}
+          </button>
+          <button onClick={handleRescueNext} disabled={isLoading || isEmpty}>
+            {isLoading ? 'Rescuing...' : 'Rescue Next User'}
+          </button>
         </div>
 
         <div className="queue-section">
-          <h2>Rescue Queue ({queue.length} families)</h2>
+          <h2>Rescue Queue ({queue.length})</h2>
           {queue.length > 0 ? (
             <div className="queue-list">
-              {queue.map(family => (
-                <div key={family.id} className="queue-item">
-                  <div className="family-info">
-                    <h4>{family.name}</h4>
-                    <p>{family.address}</p>
-                  </div>
-                  <div className="priority-indicator">
-                    <span className="priority-badge">Priority: {family.priority}</span>
-                    <div className="member-counts">
-                      <span className="count-tag children">👶 {family.children}</span>
-                      <span className="count-tag elderly">👵 {family.elderly}</span>
-                    </div>
+              {queue.map((user, index) => (
+                <div key={index} className="queue-item">
+                  <div className="user-info">
+                    <h4>{user.name}</h4>
+                    <p>Children: {user.childrenCount || 0} | Elderly: {user.elderlyCount || 0}</p>
+                    <p>Priority: {user.priority || ((user.childrenCount || 0) * 2 + (user.elderlyCount || 0) * 3)}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="empty-queue">No families in the rescue queue.</p>
+            <p>No families currently in the queue.</p>
           )}
         </div>
       </div>
