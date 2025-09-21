@@ -161,7 +161,7 @@ const UserLogin = ({ onLoginSuccess }) => {
             </form>
 
             <div className="login-redirect">
-              <p>Don't have an account? <a href="/register">Register here</a></p>
+              <p>Don't have an account? <a href="/userregistration">Register here</a></p>
             </div>
           </div>
 
