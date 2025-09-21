@@ -25,6 +25,12 @@ public class User {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
+    @Column(name = "email", nullable = false)
+    private String email;
+
+    @Column(name = "password", nullable = false)
+    private String password;
+
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
@@ -66,10 +72,12 @@ public class User {
     // Constructors
     public User() {}
 
-    public User(String rfid, String name, String phoneNumber) {
+    public User(String rfid, String name, String phoneNumber, String email, String password) {
         this.rfid = rfid;
         this.name = name;
         this.phoneNumber = phoneNumber;
+        this.email = email;
+        this.password = password;
         this.status = UserStatus.SAFE;
         this.rescuePriority = 0;
     }
@@ -113,4 +121,20 @@ public class User {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
