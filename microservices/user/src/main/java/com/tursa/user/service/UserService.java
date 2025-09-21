@@ -31,13 +31,23 @@ public class UserService {
                 throw new IllegalArgumentException("RFID and name are required");
             }
 
+            // Check for duplicate RFID in MySQL
             if (userRepository.findByRfid(user.getRfid()).isPresent()) {
                 throw new IllegalArgumentException("User with RFID " + user.getRfid() + " already exists");
             }
 
-            // Register user
+            // Save to MySQL
             User savedUser = userRepository.save(user);
-            logger.info("Created new user: {}", savedUser.getRfid());
+            logger.info("Created new user in MySQL: {}", savedUser.getRfid());
+
+            // Save to Firebase
+            try {
+                firebaseService.saveUser(savedUser);
+                logger.info("Created new user in Firebase: {}", savedUser.getRfid());
+            } catch (Exception e) {
+                logger.error("Failed to save user {} to Firebase: {}", savedUser.getRfid(), e.getMessage());
+            }
+
             return savedUser;
 
         } catch (Exception e) {
