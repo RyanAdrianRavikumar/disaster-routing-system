@@ -163,48 +163,60 @@ const UserRegistration = ({ onRegistrationSuccess }) => {
 
       console.log('Registration data:', submissionData);
       
-      // In a real application, you would send this data to your backend API
-      // Example:
-      // const response = await fetch('http://localhost:8080/api/users/register', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(submissionData),
-      // });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setMessage('Registration successful! Welcome to the shelter system.');
-      
-      // Reset form
-      setFormData({
-        rfid: '',
-        name: '',
-        phoneNumber: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        currentLatitude: '',
-        currentLongitude: '',
-        familyCount: 1,
-        childrenCount: 0,
-        elderlyCount: 0
+      // Make the actual API call to your backend
+      const response = await fetch('http://localhost:8082/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submissionData),
       });
-      
-      // Call the success callback to update registration status
-      if (onRegistrationSuccess) {
-        onRegistrationSuccess();
+
+      if (response.ok) {
+        const createdUser = await response.json();
+        console.log('User registered successfully:', createdUser);
+        
+        setMessage('Registration successful! Welcome to the shelter system.');
+        
+        // Reset form
+        setFormData({
+          rfid: '',
+          name: '',
+          phoneNumber: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          currentLatitude: '',
+          currentLongitude: '',
+          familyCount: 1,
+          childrenCount: 0,
+          elderlyCount: 0
+        });
+        
+        // Call the success callback to update registration status
+        if (onRegistrationSuccess) {
+          onRegistrationSuccess();
+        }
+        
+        // Navigate to route management after a brief delay
+        setTimeout(() => {
+          navigate('/routemanagement');
+        }, 2000);
+        
+      } else if (response.status === 400) {
+        // Bad request - validation error
+        setMessage('Registration failed: Please check your information and try again.');
+      } else if (response.status === 500) {
+        // Internal server error
+        setMessage('Registration failed: Server error. Please try again later.');
+      } else {
+        // Other errors
+        setMessage('Registration failed: An unexpected error occurred. Please try again.');
       }
       
-      // Navigate to route management after a brief delay
-      setTimeout(() => {
-        navigate('/routemanagement');
-      }, 2000);
-      
     } catch (error) {
-      setMessage('Registration failed. Please try again.');
+      console.error('Registration error:', error);
+      setMessage('Registration failed: Unable to connect to the server. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
