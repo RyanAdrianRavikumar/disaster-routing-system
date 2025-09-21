@@ -24,8 +24,17 @@ public class ShelterController {
     @PostMapping("/create/{shelterId}")
     public ResponseEntity<String> createShelter(@PathVariable String shelterId,
                                                 @RequestParam String name,
-                                                @RequestParam int capacity) {
-        return ResponseEntity.ok(shelterService.createShelter(shelterId, name, capacity));
+                                                @RequestParam int capacity,
+                                                @RequestParam Double latitude,
+                                                @RequestParam Double longitude){
+        return ResponseEntity.ok(shelterService.createShelter(shelterId, name, capacity, latitude, longitude));
+    }
+    @GetMapping("/available")
+    public ResponseEntity<List<Shelter>> getAvailableShelters() {
+        List<Shelter> available = shelterService.getAllShelters().stream()
+                .filter(s -> s.getQueue().getRemainingCapacity() > 0)
+                .toList();
+        return ResponseEntity.ok(available);
     }
 
     @PostMapping("/{shelterId}/checkin/{rfidTag}")

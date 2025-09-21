@@ -22,30 +22,49 @@
 		<java.version>17</java.version>
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
+
+		<!-- Version pins -->
+		<firebase.admin.version>9.6.0</firebase.admin.version>
+		<google.auth.version>1.39.1</google.auth.version>
+		<lombok.version>1.18.26</lombok.version>
 	</properties>
 
 	<dependencies>
-		<!-- Spring Boot Web -->
+		<!-- Spring Boot Web (includes Spring Framework annotations like @Configuration, @Bean) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
-		<!-- Firebase Admin SDK -->
+		<!-- Firebase Admin SDK (provides FirebaseApp, FirebaseOptions, Realtime DB admin features) -->
 		<dependency>
 			<groupId>com.google.firebase</groupId>
 			<artifactId>firebase-admin</artifactId>
-			<version>9.2.0</version>
+			<version>${firebase.admin.version}</version>
+		</dependency>
+
+		<!-- Explicit Google Auth libraries to avoid transitive version conflicts for GoogleCredentials -->
+		<dependency>
+			<groupId>com.google.auth</groupId>
+			<artifactId>google-auth-library-credentials</artifactId>
+			<version>${google.auth.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.auth</groupId>
+			<artifactId>google-auth-library-oauth2-http</artifactId>
+			<version>${google.auth.version}</version>
 		</dependency>
 
 		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<optional>true</optional>
+			<version>${lombok.version}</version>
+			<scope>provided</scope>
 		</dependency>
 
-		<!-- Spring Boot Test -->
+		<!-- Testing -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -61,9 +80,20 @@
 
 	<build>
 		<plugins>
+			<!-- Spring Boot plugin -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+
+			<!-- Compiler plugin: ensure Java 17 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.11.0</version>
+				<configuration>
+					<release>${java.version}</release>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
