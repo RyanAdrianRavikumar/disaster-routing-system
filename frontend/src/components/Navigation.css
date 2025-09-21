@@ -25,12 +25,13 @@
   position: relative;
   z-index: 2;
   height: 100%;
+  width: 60%;
 }
 
 .nav-brand h2 {
   color: #0a4299;
   margin: 0;
-  font-size: 2.2rem;
+  font-size: 2.4rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -42,10 +43,10 @@
   position: absolute;
   top: 0;
   right: -54px;
-  width: 64px;
+  width: 82px;
   height: 100%;
   background: white;
-  transform: skewX(-15deg);
+  transform: skewX(-35deg);
   z-index: 2;
 }
 
