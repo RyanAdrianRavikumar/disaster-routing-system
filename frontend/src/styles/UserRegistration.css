@@ -250,33 +250,52 @@
   font-weight: 500;
 }
 
-/* Responsive design */
-@media (max-width: 1024px) {
-  .registration-content {
-    grid-template-columns: 1fr;
-  }
+/* Location Input Styles */
+.location-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-@media (max-width: 768px) {
-  .registration-dashboard {
-    padding: 15px;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-  
-  .registration-form-container {
-    padding: 20px;
-  }
-  
-  .app-header h1 {
-    font-size: 2rem;
-  }
-  
-  .app-header p {
-    font-size: 1rem;
-  }
+.location-coordinates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.location-btn {
+  background: linear-gradient(to right, #6c757d, #5a6268);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+}
+
+.location-btn:hover:not(:disabled) {
+  background: linear-gradient(to right, #5a6268, #4e555b);
+  transform: translateY(-2px);
+}
+
+.location-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Ensure number inputs look consistent */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield; /* Standard property */
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 /* Password strength indicator */
@@ -312,4 +331,41 @@
   font-size: 0.8rem;
   margin-top: 5px;
   color: #666;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .registration-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .registration-dashboard {
+    padding: 15px;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .registration-form-container {
+    padding: 20px;
+  }
+  
+  .app-header h1 {
+    font-size: 2rem;
+  }
+  
+  .app-header p {
+    font-size: 1rem;
+  }
+  
+  .location-coordinates {
+    grid-template-columns: 1fr;
+  }
+  
+  .location-btn {
+    align-self: stretch;
+  }
 }

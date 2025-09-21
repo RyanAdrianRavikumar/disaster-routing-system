@@ -40,15 +40,53 @@ const IDIcon = () => (
   </svg>
 );
 
+const FamilyIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+    <circle cx="9" cy="7" r="4"></circle>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+  </svg>
+);
+
+const ChildIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+    <circle cx="9" cy="7" r="4"></circle>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+  </svg>
+);
+
+const ElderlyIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+    <circle cx="9" cy="7" r="4"></circle>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+  </svg>
+);
+
+const LocationIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+    <circle cx="12" cy="10" r="3"></circle>
+  </svg>
+);
+
 const UserRegistration = ({ onRegistrationSuccess }) => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
     rfid: '',
+    name: '',
+    phoneNumber: '',
+    email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    currentLatitude: '',
+    currentLongitude: '',
+    familyCount: 1,
+    childrenCount: 0,
+    elderlyCount: 0
   });
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -58,8 +96,33 @@ const UserRegistration = ({ onRegistrationSuccess }) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name.includes('Count') ? parseInt(value) || 0 : value
     }));
+  };
+
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      setIsLoading(true);
+      setMessage('Getting your location...');
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setFormData(prev => ({
+            ...prev,
+            currentLatitude: position.coords.latitude,
+            currentLongitude: position.coords.longitude
+          }));
+          setMessage('Location obtained successfully!');
+          setIsLoading(false);
+        },
+        (error) => {
+          setMessage('Unable to get your location. Please enter manually.');
+          setIsLoading(false);
+        }
+      );
+    } else {
+      setMessage('Geolocation is not supported by this browser. Please enter manually.');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -76,24 +139,58 @@ const UserRegistration = ({ onRegistrationSuccess }) => {
       return;
     }
     
+    if (!formData.currentLatitude || !formData.currentLongitude) {
+      setMessage('Please provide your location');
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
+      // Prepare the data for API submission
+      const submissionData = {
+        rfid: formData.rfid,
+        name: formData.name,
+        phoneNumber: formData.phoneNumber,
+        email: formData.email,
+        password: formData.password,
+        currentLatitude: parseFloat(formData.currentLatitude),
+        currentLongitude: parseFloat(formData.currentLongitude),
+        familyCount: formData.familyCount,
+        childrenCount: formData.childrenCount,
+        elderlyCount: formData.elderlyCount
+      };
+
+      console.log('Registration data:', submissionData);
+      
       // In a real application, you would send this data to your backend API
-      console.log('Registration data:', formData);
+      // Example:
+      // const response = await fetch('http://localhost:8080/api/users/register', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify(submissionData),
+      // });
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       setMessage('Registration successful! Welcome to the shelter system.');
+      
+      // Reset form
       setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
         rfid: '',
+        name: '',
+        phoneNumber: '',
+        email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        currentLatitude: '',
+        currentLongitude: '',
+        familyCount: 1,
+        childrenCount: 0,
+        elderlyCount: 0
       });
       
       // Call the success callback to update registration status
@@ -138,30 +235,30 @@ const UserRegistration = ({ onRegistrationSuccess }) => {
             <form onSubmit={handleSubmit} className="registration-form">
               <div className="form-row">
                 <div className="form-group">
-                  <label>First Name</label>
+                  <label>RFID Tag Number *</label>
                   <div className="input-with-icon">
-                    <UserIcon />
+                    <IDIcon />
                     <input
                       type="text"
-                      name="firstName"
-                      value={formData.firstName}
+                      name="rfid"
+                      value={formData.rfid}
                       onChange={handleInputChange}
-                      placeholder="Enter your first name"
+                      placeholder="Enter your RFID tag number"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="form-group">
-                  <label>Last Name</label>
+                  <label>Full Name *</label>
                   <div className="input-with-icon">
                     <UserIcon />
                     <input
                       type="text"
-                      name="lastName"
-                      value={formData.lastName}
+                      name="name"
+                      value={formData.name}
                       onChange={handleInputChange}
-                      placeholder="Enter your last name"
+                      placeholder="Enter your full name"
                       required
                     />
                   </div>
@@ -170,7 +267,7 @@ const UserRegistration = ({ onRegistrationSuccess }) => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Email Address</label>
+                  <label>Email Address *</label>
                   <div className="input-with-icon">
                     <EmailIcon />
                     <input
@@ -185,13 +282,13 @@ const UserRegistration = ({ onRegistrationSuccess }) => {
                 </div>
 
                 <div className="form-group">
-                  <label>Phone Number</label>
+                  <label>Phone Number *</label>
                   <div className="input-with-icon">
                     <PhoneIcon />
                     <input
                       type="tel"
-                      name="phone"
-                      value={formData.phone}
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
                       onChange={handleInputChange}
                       placeholder="Enter your phone number"
                       required
@@ -202,24 +299,7 @@ const UserRegistration = ({ onRegistrationSuccess }) => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>RFID Tag Number</label>
-                  <div className="input-with-icon">
-                    <IDIcon />
-                    <input
-                      type="text"
-                      name="rfid"
-                      value={formData.rfid}
-                      onChange={handleInputChange}
-                      placeholder="Enter your RFID tag number"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Password</label>
+                  <label>Password *</label>
                   <div className="input-with-icon">
                     <LockIcon />
                     <input
@@ -227,14 +307,15 @@ const UserRegistration = ({ onRegistrationSuccess }) => {
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      placeholder="Create a password"
+                      placeholder="Create a password (min 6 characters)"
                       required
+                      minLength="6"
                     />
                   </div>
                 </div>
 
                 <div className="form-group">
-                  <label>Confirm Password</label>
+                  <label>Confirm Password *</label>
                   <div className="input-with-icon">
                     <LockIcon />
                     <input
@@ -245,6 +326,98 @@ const UserRegistration = ({ onRegistrationSuccess }) => {
                       placeholder="Confirm your password"
                       required
                     />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Family Members Count *</label>
+                  <div className="input-with-icon">
+                    <FamilyIcon />
+                    <input
+                      type="number"
+                      name="familyCount"
+                      value={formData.familyCount}
+                      onChange={handleInputChange}
+                      min="1"
+                      max="20"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Children Count</label>
+                  <div className="input-with-icon">
+                    <ChildIcon />
+                    <input
+                      type="number"
+                      name="childrenCount"
+                      value={formData.childrenCount}
+                      onChange={handleInputChange}
+                      min="0"
+                      max="20"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Elderly Count</label>
+                  <div className="input-with-icon">
+                    <ElderlyIcon />
+                    <input
+                      type="number"
+                      name="elderlyCount"
+                      value={formData.elderlyCount}
+                      onChange={handleInputChange}
+                      min="0"
+                      max="20"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Location *</label>
+                  <div className="location-input-group">
+                    <div className="location-coordinates">
+                      <div className="input-with-icon">
+                        <LocationIcon />
+                        <input
+                          type="number"
+                          step="any"
+                          name="currentLatitude"
+                          value={formData.currentLatitude}
+                          onChange={handleInputChange}
+                          placeholder="Latitude"
+                          required
+                        />
+                      </div>
+                      <div className="input-with-icon">
+                        <LocationIcon />
+                        <input
+                          type="number"
+                          step="any"
+                          name="currentLongitude"
+                          value={formData.currentLongitude}
+                          onChange={handleInputChange}
+                          placeholder="Longitude"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={getCurrentLocation}
+                      className="location-btn"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Getting Location...' : 'Get My Location'}
+                    </button>
                   </div>
                 </div>
               </div>
