@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 
 @Service
 public class ShelterRouteService {
@@ -24,16 +23,23 @@ public class ShelterRouteService {
 
     @PostConstruct
     public void init() {
+        // Load data from Firebase
         loadNodes();
         loadEdges();
         loadShelters();
+        // Load sample data if no nodes are found (for testing)
+        if (nodes.isEmpty()) {
+            initSampleData();
+        }
     }
 
+    // Load nodes from Firebase
     private void loadNodes() {
         DatabaseReference ref = database.getReference("nodes");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
+                nodes.clear();
                 for (DataSnapshot child : snapshot.getChildren()) {
                     Node node = child.getValue(Node.class);
                     if (node != null && node.getId() != null) {
@@ -50,11 +56,13 @@ public class ShelterRouteService {
         });
     }
 
+    // Load edges from Firebase
     private void loadEdges() {
         DatabaseReference ref = database.getReference("edges");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
+                edges.clear();
                 for (DataSnapshot child : snapshot.getChildren()) {
                     Edge edge = child.getValue(Edge.class);
                     if (edge != null && edge.getFrom() != null && edge.getTo() != null) {
@@ -71,11 +79,13 @@ public class ShelterRouteService {
         });
     }
 
+    // Load shelters from Firebase
     private void loadShelters() {
         DatabaseReference ref = database.getReference("shelters");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
+                shelters.clear();
                 for (DataSnapshot child : snapshot.getChildren()) {
                     Shelter shelter = child.getValue(Shelter.class);
                     if (shelter != null && shelter.getShelterId() != null) {
@@ -193,10 +203,14 @@ public class ShelterRouteService {
     }
 
     public String findNearestNode(double lat, double lng) {
+        if (nodes.isEmpty()) {
+            System.err.println("No nodes loaded for findNearestNode");
+            return null;
+        }
         String nearest = null;
         double minDist = Double.MAX_VALUE;
         for (Node node : nodes.values()) {
-            if (node.getLatitude() != 0 && node.getLongitude() != 0) { // Check for valid lat/lng
+            if (node.getLatitude() != 0 && node.getLongitude() != 0) {
                 double dist = haversineDistance(lat, lng, node.getLatitude(), node.getLongitude());
                 if (dist < minDist) {
                     minDist = dist;
@@ -204,10 +218,19 @@ public class ShelterRouteService {
                 }
             }
         }
+        if (nearest == null) {
+            System.err.println("No valid nodes found for location: " + lat + ", " + lng + ". Available nodes: " + nodes.keySet());
+        } else {
+            System.out.println("Nearest node found: " + nearest + " (distance: " + minDist + " km)");
+        }
         return nearest;
     }
 
     public String findNearestAvailableShelter(double userLat, double userLng) {
+        if (shelters.isEmpty()) {
+            System.err.println("No shelters loaded for findNearestAvailableShelter");
+            return null;
+        }
         String nearest = null;
         double minDist = Double.MAX_VALUE;
         for (Shelter shelter : shelters.values()) {
@@ -218,6 +241,11 @@ public class ShelterRouteService {
                     nearest = shelter.getShelterId();
                 }
             }
+        }
+        if (nearest == null) {
+            System.err.println("No available shelters found for location: " + userLat + ", " + userLng + ". Available shelters: " + shelters.keySet());
+        } else {
+            System.out.println("Nearest shelter found: " + nearest + " (distance: " + minDist + " km)");
         }
         return nearest;
     }
@@ -249,11 +277,14 @@ public class ShelterRouteService {
     }
 
     public RouteResponse shortestPathWithDistance(String start, String end) {
+        System.out.println("Starting Dijkstra from " + start + " to " + end + ". Available nodes: " + nodes.keySet());
         Set<String> nodeIds = nodes.keySet();
         if (!nodeIds.contains(start)) {
+            System.err.println("Start node '" + start + "' does not exist. Available nodes: " + nodeIds);
             throw new IllegalArgumentException("Start node '" + start + "' does not exist");
         }
         if (!nodeIds.contains(end)) {
+            System.err.println("End node '" + end + "' does not exist. Available nodes: " + nodeIds);
             throw new IllegalArgumentException("End node '" + end + "' does not exist");
         }
 
@@ -299,6 +330,7 @@ public class ShelterRouteService {
         List<String> path = new ArrayList<>();
         String u = end;
         if (!prev.containsKey(end) && !end.equals(start)) {
+            System.err.println("No path found from " + start + " to " + end + ". Graph edges: " + edges.keySet());
             return new RouteResponse(new ArrayList<>(), -1.0);
         }
 
@@ -307,6 +339,7 @@ public class ShelterRouteService {
             u = prev.get(u);
         }
 
+        System.out.println("Path found: " + path + ", Distance: " + dist.get(end));
         return new RouteResponse(path, dist.get(end));
     }
 
@@ -322,20 +355,20 @@ public class ShelterRouteService {
     public void initSampleData() {
         clearData();
         // Add nodes
-        addNode(new Node("A", "Point A", 40.7128, -74.0060));
-        addNode(new Node("B", "Point B", 40.7228, -74.0160));
-        addNode(new Node("C", "Point C", 40.7328, -74.0260));
-        addNode(new Node("D", "Point D", 40.7428, -74.0360));
-        addNode(new Node("E", "Point E", 40.7528, -74.0460));
+        addNode(new Node("A", "Point A", 6.990779833333333, 79.89826183333334));
+        addNode(new Node("B", "Point B", 6.991779833333333, 79.89926183333334));
+        addNode(new Node("C", "Point C", 6.992779833333333, 79.90026183333334));
+        addNode(new Node("D", "Point D", 6.993779833333333, 79.90126183333334));
+        addNode(new Node("E", "Point E", 6.994779833333333, 79.90226183333334));
         // Add edges
-        addEdge(new Edge("A", "B", 5.0, false));
-        addEdge(new Edge("A", "C", 10.0, false));
-        addEdge(new Edge("B", "C", 3.0, false));
-        addEdge(new Edge("B", "D", 8.0, false));
-        addEdge(new Edge("C", "D", 4.0, false));
-        addEdge(new Edge("D", "E", 6.0, false));
+        addEdge(new Edge("A", "B", 1.0, false));
+        addEdge(new Edge("A", "C", 2.0, false));
+        addEdge(new Edge("B", "C", 1.0, false));
+        addEdge(new Edge("B", "D", 1.5, false));
+        addEdge(new Edge("C", "D", 1.0, false));
+        addEdge(new Edge("D", "E", 1.0, false));
         // Add shelters
-        createShelter("A", "Shelter A", 10, 40.7128, -74.0060);
-        createShelter("D", "Shelter D", 15, 40.7428, -74.0360);
+        createShelter("A", "Shelter A", 10, 6.990779833333333, 79.89826183333334);
+        createShelter("D", "Shelter D", 15, 6.993779833333333, 79.90126183333334);
     }
 }
