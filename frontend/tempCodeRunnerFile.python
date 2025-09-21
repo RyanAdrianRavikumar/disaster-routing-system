@@ -1,0 +1,99 @@
+import pandas as pd
+import numpy as np
+from pathlib import Path
+
+# --- 1. Find and Load the Original Data ---
+# This gets the path to the user's Downloads folder
+downloads_path = Path.home() / "Downloads"
+file_path = downloads_path / "heart_disease_dataset.csv"
+
+# Check if the file exists before trying to load it
+if not file_path.exists():
+    raise FileNotFoundError(f"Could not find the file at {file_path}. Please make sure the file is in your Downloads folder and named correctly.")
+
+df_original = pd.read_csv(file_path)
+print(f"Original dataset loaded successfully from: {file_path}")
+
+# --- 2. Identify Column Types ---
+categorical_columns = ['sex', 'cp', 'fbs', 'restecg', 'exang', 'slope', 'ca', 'thal', 'smoking', 'diabetes']
+numerical_columns = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak', 'bmi']
+target_column = 'heart_disease'
+
+# --- 3. Analyze the Original Data for Key Statistics ---
+num_constraints = {}
+for col in numerical_columns:
+    num_constraints[col] = {
+        'min': df_original[col].min(),
+        'max': df_original[col].max(),
+        'mean': df_original[col].mean(),
+        'std': df_original[col].std()
+    }
+
+cat_constraints = {}
+for col in categorical_columns:
+    value_counts = df_original[col].value_counts(normalize=True)
+    cat_constraints[col] = {
+        'values': value_counts.index.tolist(),
+        'probabilities': value_counts.values.tolist()
+    }
+
+# --- 4. Generate Synthetic Data (10,000 rows) ---
+num_samples = 20000
+df_synthetic = pd.DataFrame()
+
+# Generate numerical data based on normal distributions
+for col in numerical_columns:
+    mean = num_constraints[col]['mean']
+    std = num_constraints[col]['std']
+    synthetic_data = np.random.normal(mean, std, num_samples)
+    # Clip the data to the original min/max to avoid extreme outliers
+    synthetic_data = np.clip(synthetic_data, num_constraints[col]['min'], num_constraints[col]['max'])
+    df_synthetic[col] = synthetic_data
+
+# Generate categorical data based on original probabilities
+for col in categorical_columns:
+    values = cat_constraints[col]['values']
+    probs = cat_constraints[col]['probabilities']
+    probs = np.array(probs) / np.sum(probs)  # Ensure probabilities sum to 1
+    synthetic_data = np.random.choice(values, size=num_samples, p=probs)
+    df_synthetic[col] = synthetic_data
+
+# --- 5. Generate the Target Variable 'heart_disease' ---
+# Create a simplistic simulated risk score based on known strong correlates.
+df_synthetic['risk_score'] = (
+    0.3 * (df_synthetic['age'] - df_synthetic['age'].mean()) / df_synthetic['age'].std() +
+    0.25 * (df_synthetic['oldpeak'] - df_synthetic['oldpeak'].mean()) / df_synthetic['oldpeak'].std() +
+    -0.25 * (df_synthetic['thalach'] - df_synthetic['thalach'].mean()) / df_synthetic['thalach'].std() + # negative correlation
+    0.2 * (df_synthetic['ca'].astype(float) - df_synthetic['ca'].astype(float).mean()) / df_synthetic['ca'].astype(float).std()
+)
+# Add some randomness
+df_synthetic['risk_score'] += np.random.normal(0, 0.5, num_samples)
+
+# Convert the continuous risk score to a binary outcome (0 or 1)
+prevalence = df_original['heart_disease'].mean()
+threshold = np.quantile(df_synthetic['risk_score'], 1 - prevalence)
+df_synthetic['heart_disease'] = (df_synthetic['risk_score'] > threshold).astype(int)
+
+# Drop the temporary 'risk_score' column
+df_synthetic.drop('risk_score', axis=1, inplace=True)
+
+# --- 6. Final Touches and Save ---
+# Round numerical columns to appropriate decimals
+df_synthetic[numerical_columns] = df_synthetic[numerical_columns].round(1)
+# Categorical 'ca' and 'thal' might have decimals from clipping, convert to int
+df_synthetic[['ca', 'thal']] = df_synthetic[['ca', 'thal']].astype(int)
+
+# Reorder columns to match the original
+column_order = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal', 'smoking', 'diabetes', 'bmi', 'heart_disease']
+df_synthetic = df_synthetic[column_order]
+
+# Save the new synthetic dataset to the SAME Downloads folder
+output_path = downloads_path / "synthetic_heart_disease_dataset_10k.csv"
+df_synthetic.to_csv(output_path, index=False)
+
+print("\nSynthetic dataset with 10,000 rows generated successfully!")
+print(f"Original dataset shape: {df_original.shape}")
+print(f"Synthetic dataset shape: {df_synthetic.shape}")
+print(f"Original prevalence of heart disease: {df_original.heart_disease.mean():.2%}")
+print(f"Synthetic prevalence of heart disease: {df_synthetic.heart_disease.mean():.2%}")
+print(f"\nFile saved to: {output_path}")

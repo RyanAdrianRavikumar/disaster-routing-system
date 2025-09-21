@@ -8,15 +8,19 @@ public class Shelter {
     private String name;
     private int capacity;
     private ShelterQueue queue;
+    private Double latitude;  // New field
+    private Double longitude; // New field
 
     // No-args constructor for Firebase
     public Shelter() {
     }
 
-    public Shelter(String shelterId, String name, int capacity) {
+    public Shelter(String shelterId, String name, int capacity, Double latitude, Double longitude) {
         this.shelterId = shelterId;
         this.name = name;
         this.capacity = capacity;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.queue = new ShelterQueue(capacity);
     }
 
@@ -31,6 +35,7 @@ public class Shelter {
         }
         return queue;
     }
+
 
     // Setters
     public void setShelterId(String shelterId) { this.shelterId = shelterId; }
@@ -51,4 +56,9 @@ public class Shelter {
             queue.setCapacity(capacity);
         }
     }
+
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 }
