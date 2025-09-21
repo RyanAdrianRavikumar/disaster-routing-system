@@ -21,7 +21,12 @@ public class UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        try {
+            // Use the synchronous REST-based method in FirebaseRealtimeService
+            return firebaseService.getAllUsers();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch users from Firebase", e);
+        }
     }
 
     public User createUser(User user) {

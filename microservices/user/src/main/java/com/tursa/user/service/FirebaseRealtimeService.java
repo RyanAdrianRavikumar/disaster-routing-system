@@ -1,9 +1,17 @@
 package com.tursa.user.service;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.firebase.database.*;
 import com.tursa.user.entity.User;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 
 @Service
 public class FirebaseRealtimeService {
@@ -11,6 +19,30 @@ public class FirebaseRealtimeService {
 
     public FirebaseRealtimeService() {
         this.database = FirebaseDatabase.getInstance().getReference("users");
+    }
+
+    public List<User> getAllUsers() {
+        List<User> users = new ArrayList<>();
+        try {
+            String url = "https://disasterhub-fbe9c-default-rtdb.asia-southeast1.firebasedatabase.app/users.json";
+            RestTemplate restTemplate = new RestTemplate();
+
+            // Create ObjectMapper and register JavaTimeModule
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
+
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            if (response != null) {
+                for (Map.Entry<String, Object> entry : response.entrySet()) {
+                    User user = mapper.convertValue(entry.getValue(), User.class);
+                    users.add(user);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // see full cause
+            throw new RuntimeException("Failed to fetch users from Firebase", e);
+        }
+        return users;
     }
 
     // Save full user to Firebase
