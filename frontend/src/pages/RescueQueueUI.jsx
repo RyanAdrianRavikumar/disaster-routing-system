@@ -91,7 +91,14 @@ const RescueQueueUI = () => {
         <p>Prioritizing families based on vulnerable members</p>
       </header>
 
-      <div className="dashboard">
+      <div className="rescue-dashboard">
+        {message && (
+          <div className="message-banner">
+            {message}
+            <button onClick={() => setMessage('')} className="close-btn">×</button>
+          </div>
+        )}
+
         <div className="stats-panel">
           <div className="stat-card">
             <h3>Queue Size</h3>
@@ -111,24 +118,24 @@ const RescueQueueUI = () => {
           </div>
         </div>
 
-        {message && (
-          <div className="message-banner">
-            {message}
-            <button onClick={() => setMessage('')} className="close-btn">×</button>
+        <div className="rescue-actions-card">
+          <div className="shelter-section-header">
+            <h2>Queue Actions</h2>
           </div>
-        )}
-
-        <div className="actions-panel">
-          <button onClick={handleEnqueueUsers} disabled={isLoading}>
-            {isLoading ? 'Enqueuing...' : 'Enqueue All Users'}
-          </button>
-          <button onClick={handleRescueNext} disabled={isLoading || isEmpty}>
-            {isLoading ? 'Rescuing...' : 'Rescue Next User'}
-          </button>
+          <div className="actions-panel">
+            <button className="btn btn-primary" onClick={handleEnqueueUsers} disabled={isLoading}>
+              {isLoading ? 'Enqueuing...' : 'Enqueue All Users'}
+            </button>
+            <button className="btn btn-rescue" onClick={handleRescueNext} disabled={isLoading || isEmpty}>
+              {isLoading ? 'Rescuing...' : 'Rescue Next User'}
+            </button>
+          </div>
         </div>
 
-        <div className="queue-section">
-          <h2>Rescue Queue ({queue.length})</h2>
+        <div className="rescue-queue-card">
+          <div className="shelter-section-header">
+            <h2>Rescue Queue ({queue.length})</h2>
+          </div>
           {queue.length > 0 ? (
             <div className="queue-list">
               {queue.map((user, index) => (
@@ -142,7 +149,7 @@ const RescueQueueUI = () => {
               ))}
             </div>
           ) : (
-            <p>No families currently in the queue.</p>
+            <p className="no-queue-text">No families currently in the queue.</p>
           )}
         </div>
       </div>

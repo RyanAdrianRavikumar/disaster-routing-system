@@ -1,29 +1,59 @@
 package com.tursa.shelterroute.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Node {
-    private String id; // Added field for node ID
-    private String name; // Added field for node name
-    private Double latitude; // Added field for latitude
-    private Double longitude; // Added field for longitude
+    private String shelterId;
+    private String name;
+    private double latitude;
+    private double longitude;
+    private int capacity;
+    private List<String> queue = new ArrayList<>();
 
-    public Node() {} // Added default constructor for Firebase
+    public Node() {}
 
-    public Node(String id, String name, Double latitude, Double longitude) { // Added constructor
-        this.id = id;
+    public Node(String shelterId, String name, double latitude, double longitude, int capacity) {
+        this.shelterId = shelterId;
         this.name = name;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.capacity = capacity;
     }
 
-    // Getters
-    public String getId() { return id; } // Added getter for id
-    public String getName() { return name; } // Added getter for name
-    public Double getLatitude() { return latitude; } // Added getter for latitude
-    public Double getLongitude() { return longitude; } // Added getter for longitude
+    public String getShelterId() { return shelterId; }
+    public void setShelterId(String shelterId) { this.shelterId = shelterId; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public double getLatitude() { return latitude; }
+    public void setLatitude(double latitude) { this.latitude = latitude; }
+    public double getLongitude() { return longitude; }
+    public void setLongitude(double longitude) { this.longitude = longitude; }
+    public int getCapacity() { return capacity; }
+    public void setCapacity(int capacity) { this.capacity = capacity; }
+    public List<String> getQueue() { return queue; }
+    public void setQueue(List<String> queue) { this.queue = queue; }
 
-    // Setters
-    public void setId(String id) { this.id = id; } // Added setter for id
-    public void setName(String name) { this.name = name; } // Added setter for name
-    public void setLatitude(Double latitude) { this.latitude = latitude; } // Added setter for latitude
-    public void setLongitude(Double longitude) { this.longitude = longitude; } // Added setter for longitude
+    public boolean isFull() {
+        return queue.size() >= capacity;
+    }
+
+    public int getRemainingCapacity() {
+        return capacity - queue.size();
+    }
+
+    public boolean enqueue(String rfidTag) {
+        if (!isFull()) {
+            queue.add(rfidTag);
+            return true;
+        }
+        return false;
+    }
+
+    public String dequeue() {
+        if (queue.isEmpty()) {
+            return null;
+        }
+        return queue.remove(0);
+    }
 }

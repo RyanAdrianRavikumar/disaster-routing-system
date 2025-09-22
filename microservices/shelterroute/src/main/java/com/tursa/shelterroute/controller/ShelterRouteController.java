@@ -1,106 +1,129 @@
 package com.tursa.shelterroute.controller;
 
-import com.tursa.shelterroute.entity.Edge;
 import com.tursa.shelterroute.entity.Node;
-import com.tursa.shelterroute.entity.Shelter;
 import com.tursa.shelterroute.service.ShelterRouteService;
+import com.tursa.shelterroute.service.ShelterRouteService.RouteResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "http://localhost:3000")
 public class ShelterRouteController {
+
     @Autowired
-    private ShelterRouteService service;
+    private ShelterRouteService shelterRouteService;
 
     @GetMapping("/nodes")
-    public ResponseEntity<List<Node>> getNodes() {
-        return ResponseEntity.ok(service.getNodes());
-    }
-
-    @GetMapping("/edges")
-    public ResponseEntity<List<Edge>> getEdges() {
-        return ResponseEntity.ok(service.getEdges());
+    public List<Node> getNodes() {
+        return shelterRouteService.getNodes();
     }
 
     @GetMapping("/shelters")
-    public ResponseEntity<List<Shelter>> getShelters() {
-        return ResponseEntity.ok(service.getShelters());
+    public List<Node> getShelters() {
+        return shelterRouteService.getNodes().stream()
+                .filter(node -> node.getCapacity() > 0)
+                .toList();
     }
 
-    @PostMapping("/shelters/{shelterId}")
-    public ResponseEntity<String> createShelter(
-            @PathVariable String shelterId,
+    @PostMapping("/shelters")
+    public String createShelter(
+            @RequestParam String shelterId,
             @RequestParam String name,
             @RequestParam int capacity,
             @RequestParam double latitude,
             @RequestParam double longitude) {
-        return ResponseEntity.ok(service.createShelter(shelterId, name, capacity, latitude, longitude));
+        return shelterRouteService.createOrUpdateShelter(shelterId, name, capacity, latitude, longitude);
     }
 
-    @PostMapping("/shelters/{shelterId}/checkin/{rfidTag}")
-    public ResponseEntity<String> checkInUser(
-            @PathVariable String shelterId,
-            @PathVariable String rfidTag) {
-        return ResponseEntity.ok(service.checkInUser(shelterId, rfidTag));
+    @DeleteMapping("/shelters/{shelterId}")
+    public String deleteShelter(@PathVariable String shelterId) {
+        return shelterRouteService.deleteShelter(shelterId);
     }
 
-    @PostMapping("/shelters/{shelterId}/checkout")
-    public ResponseEntity<String> checkOutUser(
-            @PathVariable String shelterId) {
-        return ResponseEntity.ok(service.checkOutUser(shelterId));
+    @PostMapping("/check-in")
+    public String checkInUser(@RequestParam String shelterId, @RequestParam String rfidTag) {
+        return shelterRouteService.checkInUser(shelterId, rfidTag);
     }
 
-    @GetMapping("/nearest-shelter-path")
-    public ResponseEntity<Map<String, Object>> getNearestShelterPath(
-            @RequestParam double userLat,
-            @RequestParam double userLng) {
-        try {
-            String startNode = service.findNearestNode(userLat, userLng);
-            if (startNode == null) {
-                return ResponseEntity.ok(Map.of("error", "No nodes available"));
-            }
-            String endNode = service.findNearestAvailableShelter(userLat, userLng);
-            if (endNode == null) {
-                return ResponseEntity.ok(Map.of("error", "No available shelters"));
-            }
-            Shelter shelter = service.getShelters().stream()
-                    .filter(s -> s.getShelterId().equals(endNode))
-                    .findFirst()
-                    .orElse(null);
-            String shelterName = shelter != null ? shelter.getName() : "Unknown";
-            ShelterRouteService.RouteResponse response = service.shortestPathWithDistance(startNode, endNode);
-            if (response.getPath().isEmpty()) {
-                return ResponseEntity.ok(Map.of("error", "No path found between nodes " + startNode + " and " + endNode));
-            }
-            return ResponseEntity.ok(Map.of(
-                    "path", response.getPath(),
-                    "distance", response.getDistance(),
-                    "shelterId", endNode,
-                    "shelterName", shelterName
-            ));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.ok(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            System.err.println("Unexpected error in pathfinding: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.ok(Map.of("error", "Internal server error: " + e.getMessage()));
-        }
+    @PostMapping("/check-out")
+    public String checkOutUser(@RequestParam String shelterId) {
+        return shelterRouteService.checkOutUser(shelterId);
+    }
+
+    @GetMapping("/find-nearest")
+    public String findNearestNode(@RequestParam double lat, @RequestParam double lng) {
+        return shelterRouteService.findNearestNode(lat, lng);
+    }
+
+    @GetMapping("/find-nearest-shelter")
+    public String findNearestShelter(@RequestParam double lat, @RequestParam double lng) {
+        return shelterRouteService.findNearestShelter(lat, lng);
+    }
+
+    @GetMapping("/shortest-path")
+    public RouteResponse getShortestPath(@RequestParam String start, @RequestParam String end) {
+        return shelterRouteService.shortestPathWithDistance(start, end);
+    }
+
+    @PostMapping("/shortest-path-from-user")
+    public RouteResponse getShortestPathFromUser(
+            @RequestBody UserPathRequest request) {
+        return shelterRouteService.shortestPathFromUser(
+                request.getUserLat(),
+                request.getUserLng(),
+                request.getNearestNodeId(),
+                request.getEnd());
     }
 
     @PostMapping("/init-data")
-    public ResponseEntity<String> initSampleData() {
-        service.initSampleData();
-        return ResponseEntity.ok("Sample data initialized");
+    public void initSampleData() {
+        shelterRouteService.initSampleData();
     }
 
-    @PostMapping("/clear-data")
-    public ResponseEntity<String> clearData() {
-        service.clearData();
-        return ResponseEntity.ok("Data cleared");
+    @DeleteMapping("/clear-data")
+    public void clearData() {
+        shelterRouteService.clearData();
+    }
+
+    public static class UserPathRequest {
+        private double userLat;
+        private double userLng;
+        private String nearestNodeId;
+        private String end;
+
+        public double getUserLat() {
+            return userLat;
+        }
+
+        public void setUserLat(double userLat) {
+            this.userLat = userLat;
+        }
+
+        public double getUserLng() {
+            return userLng;
+        }
+
+        public void setUserLng(double userLng) {
+            this.userLng = userLng;
+        }
+
+        public String getNearestNodeId() {
+            return nearestNodeId;
+        }
+
+        public void setNearestNodeId(String nearestNodeId) {
+            this.nearestNodeId = nearestNodeId;
+        }
+
+        public String getEnd() {
+            return end;
+        }
+
+        public void setEnd(String end) {
+            this.end = end;
+        }
     }
 }

@@ -1,14 +1,14 @@
 package com.tursa.shelterroute.entity;
 
 public class Edge {
-    private String from; // Added field for starting node
-    private String to; // Added field for ending node
-    private double weight; // Added field for edge weight (distance in km)
-    private boolean blocked; // Added field for blocked status
+    private String from; // Starting node
+    private String to; // Ending node
+    private double weight; // Edge weight (distance in km)
+    private boolean blocked; // Blocked status
 
-    public Edge() {} // Added default constructor for Firebase
+    public Edge() {} // Default constructor for Firebase
 
-    public Edge(String from, String to, double weight, boolean blocked) { // Added constructor
+    public Edge(String from, String to, double weight, boolean blocked) {
         this.from = from;
         this.to = to;
         this.weight = weight;
@@ -16,14 +16,14 @@ public class Edge {
     }
 
     // Getters
-    public String getFrom() { return from; } // Added getter for from
-    public String getTo() { return to; } // Added getter for to
-    public double getWeight() { return weight; } // Added getter for weight
-    public boolean isBlocked() { return blocked; } // Added getter for blocked
+    public String getFrom() { return from; }
+    public String getTo() { return to; }
+    public double getWeight() { return weight; }
+    public boolean isBlocked() { return blocked; }
 
     // Setters
-    public void setFrom(String from) { this.from = from; } // Added setter for from
-    public void setTo(String to) { this.to = to; } // Added setter for to
-    public void setWeight(double weight) { this.weight = weight; } // Added setter for weight
-    public void setBlocked(boolean blocked) { this.blocked = blocked; } // Added setter for blocked
+    public void setFrom(String from) { this.from = from; }
+    public void setTo(String to) { this.to = to; }
+    public void setWeight(double weight) { this.weight = weight; }
+    public void setBlocked(boolean blocked) { this.blocked = blocked; }
 }
