@@ -1,174 +1,327 @@
+/* ShelterRouteUI.css - Updated with consistent spacing and layout */
 .shelter-route-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* Set font family */
-    color: #333;
-    /* Set text color */
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
-    /* Set background gradient */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  color: #333;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
 }
 
 .app-header {
-    text-align: center;
-    padding: 25px 20px;
-    background: linear-gradient(135deg, #1a75bc 0%, #0a4299 100%);
-    /* Set header background gradient */
-    color: white;
-    /* Set header text color */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    /* Add shadow */
-    margin-bottom: 20px;
-    /* Add bottom margin */
+  text-align: center;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #1a75bc 0%, #0a4299 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-bottom: 0;
 }
 
 .app-header h1 {
-    margin: 0;
-    font-size: 2.4rem;
-    /* Set title font size */
-    font-weight: 600;
-    /* Set title font weight */
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 600;
 }
 
 .app-header p {
-    margin: 12px 0 0;
-    opacity: 0.9;
-    /* Set paragraph opacity */
-    font-size: 1.1rem;
-    /* Set paragraph font size */
+  margin: 2px 0 6px;
+  opacity: 0.9;
+  font-size: 1.1rem;
 }
 
-.message-banner {
-    padding: 16px 20px;
-    background-color: #e3f2fd;
-    /* Set background color */
-    border-left: 4px solid #1a75bc;
-    /* Add border */
-    border-radius: 8px;
-    /* Set border radius */
-    display: flex;
-    justify-content: space-between;
-    /* Align content */
-    align-items: center;
-    margin-bottom: 25px;
-    /* Add bottom margin */
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    /* Add shadow */
+.shelter-route-dashboard {
+  padding: 25px;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
 }
 
-.close-btn {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    /* Set font size */
-    cursor: pointer;
-    color: #666;
-    /* Set color */
-    transition: color 0.2s ease;
-    /* Add transition */
+.shelter-route-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
-.close-btn:hover {
-    color: #333;
-    /* Set hover color */
+.shelter-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 15px;
+}
+
+.shelter-section-header h2 {
+  margin: 0;
+  color: #1a75bc;
+  font-size: 1.4rem;
+}
+
+.controls-container {
+  margin-bottom: 20px;
 }
 
 .controls {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    /* Set gap between buttons */
-    margin-bottom: 20px;
-    /* Add bottom margin */
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
-.find-path-btn {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 6px;
-    /* Set border radius */
-    font-weight: bold;
-    /* Set font weight */
-    cursor: pointer;
-    transition: all 0.3s ease;
-    /* Add transition */
-    background: linear-gradient(to right, #1a75bc, #0a4299);
-    /* Set background gradient */
-    color: white;
-    /* Set text color */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
 }
 
-.find-path-btn:hover:not(:disabled) {
-    background: linear-gradient(to right, #1565c0, #083c88);
-    /* Set hover background */
-    transform: translateY(-2px);
-    /* Add hover effect */
-    box-shadow: 0 4px 8px rgba(26, 117, 188, 0.3);
-    /* Add hover shadow */
+.btn-primary {
+  background: linear-gradient(to right, #1a75bc, #0a4299);
+  color: white;
 }
 
-.find-path-btn:disabled {
-    background: #ccc;
-    /* Set disabled background */
-    cursor: not-allowed;
-    /* Set cursor */
-    transform: none;
-    /* Reset transform */
-    box-shadow: none;
-    /* Reset shadow */
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(to right, #1565c0, #083c88);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(26, 117, 188, 0.3);
 }
 
-.path-result {
-    margin-top: 20px;
-    padding: 20px;
-    background: #f9f9f9;
-    /* Set background */
-    border-radius: 8px;
-    /* Set border radius */
-    border-left: 4px solid #4caf50;
-    /* Add border */
+.btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-.path-result h2 {
-    margin-top: 0;
-    color: #333;
-    /* Set title color */
+.init-data-btn {
+  background: linear-gradient(to right, #6c757d, #5a6268);
+  color: white;
+}
+
+.init-data-btn:hover {
+  background: linear-gradient(to right, #5a6268, #4e555b);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+}
+
+.location-info {
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #1a75bc;
+}
+
+.location-info h3 {
+  margin: 0 0 10px 0;
+  color: #1a75bc;
+}
+
+.location-info p {
+  margin: 5px 0;
+  color: #555;
+}
+
+.map-container {
+  height: 500px;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Ensure Leaflet map respects our container */
+.leaflet-container {
+  border-radius: 12px;
+  height: 100%;
+  z-index: 1;
+}
+
+.results-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+.shelter-info, .path-info {
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #1a75bc;
+}
+
+.shelter-info h3, .path-info h3 {
+  margin: 0 0 15px 0;
+  color: #1a75bc;
+}
+
+.shelter-info p, .path-info p {
+  margin: 8px 0;
+  color: #555;
 }
 
 .path-nodes {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    /* Set gap */
-    margin-bottom: 15px;
-    /* Add bottom margin */
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 15px 0;
 }
 
 .path-node {
-    background: #e3f2fd;
-    /* Set background */
-    color: #1565c0;
-    /* Set text color */
-    padding: 6px 12px;
-    /* Set padding */
-    border-radius: 16px;
-    /* Set border radius */
-    font-weight: 500;
-    /* Set font weight */
+  background: #e8f4fd;
+  color: #1a75bc;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.path-node.user {
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
 .path-arrow {
-    color: #666;
-    /* Set arrow color */
-    font-weight: bold;
-    /* Set font weight */
+  color: #666;
+  font-weight: bold;
+  margin: 0 5px;
 }
 
-.leaflet-container {
-    border-radius: 12px;
-    /* Set border radius */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-    /* Add shadow */
+.shelters-list {
+  margin-top: 15px;
+}
+
+.shelter-item {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shelter-item:last-child {
+  border-bottom: none;
+}
+
+.shelter-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.shelter-details {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.capacity-badge {
+  background: #e8f4fd;
+  color: #1a75bc;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.message-banner {
+  padding: 16px 20px;
+  border-left: 4px solid #1a75bc;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.message-banner.error {
+  background-color: #ffebee;
+  border-color: #f44336;
+  color: #c62828;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .results-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .shelter-route-dashboard {
+    padding: 15px;
+  }
+  
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+  
+  .app-header h1 {
+    font-size: 2rem;
+  }
+  
+  .app-header p {
+    font-size: 1rem;
+  }
+  
+  .map-container {
+    height: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .path-nodes {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .path-arrow {
+    display: none;
+  }
+  
+  .shelter-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .capacity-badge {
+    align-self: flex-start;
+  }
 }
